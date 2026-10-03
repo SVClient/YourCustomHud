@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "ych",
+	"version": "${version}",
+	"name": "YourCustomHud",
+	"description": "Create your custom hud!",
+	"authors": [
+		"Tovasha"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/yourcustomhud",
+		"sources": "https://github.com/SVClient/YourCustomHud",
+		"issues": "https://github.com/SVClient/YourCustomHud/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/ych/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"org.tovasha.ych.YourCustomHud"
+		],
+		"modmenu": [
+			"org.tovasha.ych.modmenu.ModMenuImplementation"
+		]
+	},
+	"mixins": [
+		"ych.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
