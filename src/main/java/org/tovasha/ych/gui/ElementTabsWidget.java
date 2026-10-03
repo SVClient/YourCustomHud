@@ -9,9 +9,11 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.lwjgl.glfw.GLFW;
+import org.tovasha.ych.YourCustomHud;
 import org.tovasha.ych.api.HudElement;
 import org.tovasha.ych.api.HudRegistry;
 import org.tovasha.ych.render.RenderUtils;
+import org.tovasha.ych.storage.StorageManager;
 
 @Getter
 @Setter
@@ -125,10 +127,11 @@ public class ElementTabsWidget {
     }
 
     private void drawChevron(GuiGraphics graphics, int cx, int cy, boolean left, int color) {
-        int dir = left ? -1 : 1;
+        int dir = left ? 1 : -1;
+        int tipX = left ? cx - 2 : cx + 2;
         for (int i = 0; i < 4; i++) {
-            graphics.fill(cx + i * dir, cy - i, cx + i * dir + 1, cy - i + 1, color);
-            graphics.fill(cx + i * dir, cy + i, cx + i * dir + 1, cy + i + 1, color);
+            graphics.fill(tipX + i * dir, cy - i, tipX + i * dir + 1, cy - i + 1, color);
+            graphics.fill(tipX + i * dir, cy + i, tipX + i * dir + 1, cy + i + 1, color);
         }
     }
 
@@ -205,7 +208,9 @@ public class ElementTabsWidget {
 
         if (mx >= curX && mx <= curX + 14) {
             if (selectedElement != null) {
-                HudRegistry.unregister(selectedElement.getId());
+                String toDeleteId = selectedElement.getId();
+                HudRegistry.unregister(toDeleteId);
+                StorageManager.deleteElement(YourCustomHud.CONFIG.getActivePreset(), toDeleteId);
                 List<HudElement> remaining = HudRegistry.getElements();
                 selectedElement = remaining.isEmpty() ? null : remaining.get(0);
                 nameInput = selectedElement != null ? selectedElement.getName() : "";

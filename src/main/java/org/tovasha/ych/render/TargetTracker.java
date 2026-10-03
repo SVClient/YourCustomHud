@@ -52,9 +52,11 @@ public class TargetTracker {
             double bestDist = 6.0;
             LivingEntity found = null;
 
-            List<? extends Player> players = mc.level.players();
-            for (Player other : players) {
-                if (other != mc.player && other.isAlive() && other.distanceTo(mc.player) <= 6.0) {
+            List<LivingEntity> entities = mc.level.getEntitiesOfClass(LivingEntity.class,
+                    mc.player.getBoundingBox().inflate(6.0),
+                    other -> other != mc.player && other.isAlive() && !(other instanceof ArmorStand));
+            for (LivingEntity other : entities) {
+                if (other.distanceTo(mc.player) <= 6.0) {
                     AABB box = other.getBoundingBox().inflate(0.3);
                     if (box.clip(eyePos, reachVec).isPresent()) {
                         double d = other.distanceTo(mc.player);

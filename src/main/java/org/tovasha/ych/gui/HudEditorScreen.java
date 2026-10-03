@@ -1,5 +1,7 @@
 package org.tovasha.ych.gui;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -201,6 +203,45 @@ public class HudEditorScreen extends Screen {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    @Override
+    public void onFilesDrop(List<Path> paths) {
+        if (paths == null || paths.isEmpty()) return;
+        String currentPreset = presetBar != null ? presetBar.getActivePreset() : YourCustomHud.CONFIG.getActivePreset();
+        HudElement lastImported = null;
+
+        for (Path path : paths) {
+            File file = path.toFile();
+            if (!file.exists()) continue;
+
+            String fileName = file.getName();
+            if (fileName.endsWith(".svhe")) {
+                HudElement el = StorageManager.importElement(file, currentPreset);
+                if (el != null) {
+                    HudRegistry.register(el);
+                    lastImported = el;
+                }
+            } else if (fileName.endsWith(".svhud") || fileName.endsWith(".zip")) {
+                String presetName = fileName.replace(".svhud", "").replace(".zip", "");
+                File targetDir = new File(StorageManager.getPresetsDir(), presetName);
+                StorageManager.importZip(file, targetDir);
+                if (presetBar != null) {
+                    presetBar.refreshPresets();
+                    presetBar.setActivePreset(presetName);
+                }
+                YourCustomHud.CONFIG.setActivePreset(presetName);
+                StorageManager.loadPreset(presetName);
+                List<HudElement> els = HudRegistry.getElements();
+                selectElement(els.isEmpty() ? null : els.get(0));
+                return;
+            }
+        }
+
+        if (lastImported != null) {
+            bakePreset();
+            selectElement(lastImported);
+        }
     }
 
     @Override

@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import org.tovasha.ych.script.Interpreter;
 import org.tovasha.ych.script.Lexer;
 import org.tovasha.ych.script.Parser;
+import org.tovasha.ych.script.ReturnException;
 import org.tovasha.ych.script.ScriptDiagnostic;
 import org.tovasha.ych.script.Token;
 import org.tovasha.ych.script.ast.ProgramNode;
@@ -32,6 +33,7 @@ public class HudElement {
     private float width = 100;
     private float height = 30;
     private String font = "default";
+    private ProgramNode programNode;
 
     public void setX(float x) {
         this.x = x;
@@ -76,7 +78,7 @@ public class HudElement {
         diagnostics.addAll(lexer.getDiagnostics());
 
         Parser parser = new Parser(tokens);
-        ProgramNode program = parser.parse();
+        programNode = parser.parse();
         diagnostics.addAll(parser.getDiagnostics());
 
         interpreter = new Interpreter();
@@ -96,7 +98,8 @@ public class HudElement {
         interpreter.registerGlobal("target", builtinTarget);
 
         try {
-            interpreter.interpret(program);
+            interpreter.interpret(programNode);
+        } catch (ReturnException ignored) {
         } catch (Exception e) {
             diagnostics.add(new ScriptDiagnostic("Runtime init error: " + e.getMessage(), 1, 1, true));
         }
@@ -108,7 +111,12 @@ public class HudElement {
         }
         builtinRender.setGraphics(graphics);
         try {
-            interpreter.callFunction("main");
+            if (interpreter.hasFunction("main")) {
+                interpreter.callFunction("main");
+            } else if (programNode != null) {
+                interpreter.interpret(programNode);
+            }
+        } catch (ReturnException ignored) {
         } catch (Exception e) {
             diagnostics.add(new ScriptDiagnostic("Render error: " + e.getMessage(), 1, 1, true));
         }

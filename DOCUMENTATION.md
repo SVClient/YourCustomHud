@@ -296,8 +296,9 @@ num r = 5;
 Render.drawRoundedRect(0, 0, Params.width, Params.height, r, bg);
 Render.drawRoundedOutline(0, 0, Params.width, Params.height, r, 1.0, border);
 
-// 3D Голова игрока со вторым слоем (шляпой)
-Render.drawPlayerHead(6, 6, 30);
+// Голова игрока через текстуру из Target.getHeadTexture()
+string headTex = Target.getHeadTexture();
+Render.drawImage(headTex, 6, 6, 30, 30);
 Render.drawRoundedOutline(6, 6, 30, 30, 2, 1.0, #404040FF);
 
 // Имя цели
@@ -308,7 +309,7 @@ Render.drawText(targetName, 42, 6, Font.bahnschrift, 9, #FFFFFF);
 num hp = Target.getHealth();
 num maxHp = Target.getMaxHealth();
 if (maxHp <= 0) { maxHp = 20; }
-num barW = 80;
+num barW = 75;
 num filledW = (hp / maxHp) * barW;
 if (filledW > barW) { filledW = barW; }
 if (filledW < 0) { filledW = 0; }
@@ -322,8 +323,11 @@ Render.drawRoundedOutline(42, 24, barW, 8, 2, 1.0, #444444FF);
 // Текст здоровья
 Render.drawText(hp + " HP", 42 + barW + 5, 24, Font.bahnschrift, 8, #FF8888);
 
-// Предмет в правой руке цели
-Render.drawTargetItemRight(126, 5, 16);
+// Предмет в правой руке цели через Target.getRightHandItemTexture()
+string itemRight = Target.getRightHandItemTexture();
+if (itemRight != "") {
+    Render.drawImage(itemRight, 128, 5, 16, 16);
+}
 ```
 
 ---

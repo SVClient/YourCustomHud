@@ -143,7 +143,7 @@ public class BuiltinVariables implements ScriptNamespace {
             case "cpsRmb":
                 return (double) CpsTracker.getRmbCps();
             case "target":
-                return TargetTracker.hasTarget() ? TargetTracker.getTargetNamespace() : null;
+                return TargetTracker.getTargetNamespace();
             case "hasTarget":
             case "hastarget":
                 return TargetTracker.hasTarget();

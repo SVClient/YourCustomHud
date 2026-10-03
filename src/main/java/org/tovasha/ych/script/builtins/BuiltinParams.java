@@ -1,11 +1,13 @@
 package org.tovasha.ych.script.builtins;
 
 import java.awt.Color;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import org.tovasha.ych.api.HudElement;
 import org.tovasha.ych.api.ParamRegistry;
+import org.tovasha.ych.script.ScriptCallable;
 
 public class BuiltinParams implements ScriptNamespace {
     private final HudElement element;
@@ -50,20 +52,36 @@ public class BuiltinParams implements ScriptNamespace {
         }
     }
 
+    private float resolveFloat(Object value) {
+        if (value instanceof ScriptCallable callable) {
+            value = callable.call(null, Collections.emptyList());
+        }
+        if (value instanceof Number num) {
+            return num.floatValue();
+        }
+        if (value != null) {
+            try {
+                return Float.parseFloat(value.toString());
+            } catch (Exception ignored) {
+            }
+        }
+        return 0.0f;
+    }
+
     @Override
     public void setProperty(String name, Object value) {
         switch (name) {
             case "x":
-                if (value instanceof Number) element.setX(((Number) value).floatValue());
+                element.setX(resolveFloat(value));
                 break;
             case "y":
-                if (value instanceof Number) element.setY(((Number) value).floatValue());
+                element.setY(resolveFloat(value));
                 break;
             case "width":
-                if (value instanceof Number) element.setWidth(((Number) value).floatValue());
+                element.setWidth(resolveFloat(value));
                 break;
             case "height":
-                if (value instanceof Number) element.setHeight(((Number) value).floatValue());
+                element.setHeight(resolveFloat(value));
                 break;
             case "font":
                 if (value instanceof BuiltinFont) {

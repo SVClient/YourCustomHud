@@ -181,40 +181,46 @@ public class StorageManager {
                 "Params.height = 42;\n" +
                 "Params.font = Font.bahnschrift;\n" +
                 "\n" +
-                "if (!Variables.hasTarget) {\n" +
-                "    return;\n" +
-                "}\n" +
+                "fn main() {\n" +
+                "    if (!Variables.hasTarget) {\n" +
+                "        return;\n" +
+                "    }\n" +
                 "\n" +
-                "color bg = #121214D0;\n" +
-                "color border = #2A2A32FF;\n" +
-                "color healthBg = #2A2A2EAA;\n" +
-                "color healthCol = #EF4444FF;\n" +
-                "num r = 5;\n" +
+                "    let bg = 0xD0121214;\n" +
+                "    let border = 0xFF2A2A32;\n" +
+                "    let healthBg = 0xAA2A2A2E;\n" +
+                "    let healthCol = 0xFFEF4444;\n" +
                 "\n" +
-                "Render.drawRoundedRect(0, 0, Params.width, Params.height, r, bg);\n" +
-                "Render.drawRoundedOutline(0, 0, Params.width, Params.height, r, 1.0, border);\n" +
+                "    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 5, bg);\n" +
+                "    Render.drawRoundedOutline(Params.x, Params.y, Params.width, Params.height, 5, 1.0, border);\n" +
                 "\n" +
-                "Render.drawPlayerHead(6, 6, 30);\n" +
-                "Render.drawRoundedOutline(6, 6, 30, 30, 2, 1.0, #404040FF);\n" +
+                "    let headTex = Target.getHeadTexture();\n" +
+                "    Render.drawImage(headTex, Params.x + 6, Params.y + 6, 30, 30);\n" +
+                "    Render.drawRoundedOutline(Params.x + 6, Params.y + 6, 30, 30, 2, 1.0, 0xFF404040);\n" +
                 "\n" +
-                "string targetName = Target.getName();\n" +
-                "Render.drawText(targetName, 42, 6, Font.bahnschrift, 9, #FFFFFF);\n" +
+                "    let targetName = Target.getName();\n" +
+                "    Render.drawText(targetName, Params.x + 42, Params.y + 6, Font.bahnschrift, 9, 0xFFFFFFFF);\n" +
                 "\n" +
-                "num hp = Target.getHealth();\n" +
-                "num maxHp = Target.getMaxHealth();\n" +
-                "if (maxHp <= 0) { maxHp = 20; }\n" +
-                "num barW = 80;\n" +
-                "num filledW = (hp / maxHp) * barW;\n" +
-                "if (filledW > barW) { filledW = barW; }\n" +
-                "if (filledW < 0) { filledW = 0; }\n" +
+                "    let hp = Target.getHealth();\n" +
+                "    let maxHp = Target.getMaxHealth();\n" +
+                "    if (maxHp <= 0) { maxHp = 20; }\n" +
+                "    let barW = 75;\n" +
+                "    let filledW = (hp / maxHp) * barW;\n" +
+                "    if (filledW > barW) { filledW = barW; }\n" +
+                "    if (filledW < 0) { filledW = 0; }\n" +
                 "\n" +
-                "Render.drawRoundedRect(42, 24, barW, 8, 2, healthBg);\n" +
-                "if (filledW > 0) {\n" +
-                "    Render.drawRoundedRect(42, 24, filledW, 8, 2, healthCol);\n" +
-                "}\n" +
-                "Render.drawRoundedOutline(42, 24, barW, 8, 2, 1.0, #444444FF);\n" +
-                "Render.drawText(hp + \" HP\", 42 + barW + 5, 24, Font.bahnschrift, 8, #FF8888);\n" +
-                "Render.drawTargetItemRight(126, 5, 16);\n"
+                "    Render.drawRoundedRect(Params.x + 42, Params.y + 24, barW, 8, 2, healthBg);\n" +
+                "    if (filledW > 0) {\n" +
+                "        Render.drawRoundedRect(Params.x + 42, Params.y + 24, filledW, 8, 2, healthCol);\n" +
+                "    }\n" +
+                "    Render.drawRoundedOutline(Params.x + 42, Params.y + 24, barW, 8, 2, 1.0, 0xFF444444);\n" +
+                "    Render.drawText(hp + \" HP\", Params.x + 42 + barW + 5, Params.y + 24, Font.bahnschrift, 8, 0xFFFF8888);\n" +
+                "\n" +
+                "    let rightItem = Target.getRightHandItemTexture();\n" +
+                "    if (rightItem != \"\") {\n" +
+                "        Render.drawImage(rightItem, Params.x + 128, Params.y + 5, 16, 16);\n" +
+                "    }\n" +
+                "}\n"
         );
         targetHud.setX(200);
         targetHud.setY(150);
@@ -315,11 +321,63 @@ public class StorageManager {
             manifest.getElementFiles().add(fileName);
         }
 
+        File[] existing = presetDir.listFiles((dir, name) -> name.endsWith(".svhe"));
+        if (existing != null) {
+            for (File file : existing) {
+                if (!manifest.getElementFiles().contains(file.getName())) {
+                    file.delete();
+                }
+            }
+        }
+
         try (FileWriter writer = new FileWriter(new File(presetDir, "preset.json"), StandardCharsets.UTF_8)) {
             GSON.toJson(manifest, writer);
         } catch (IOException e) {
             YourCustomHud.LOGGER.error("Failed to save preset manifest", e);
         }
+    }
+
+    public static void deleteElement(String presetName, String elementId) {
+        File presetDir = new File(getPresetsDir(), presetName);
+        if (presetDir.exists()) {
+            File elFile = new File(presetDir, elementId + ".svhe");
+            if (elFile.exists()) {
+                elFile.delete();
+            }
+        }
+        savePreset(presetName);
+    }
+
+    public static HudElement importElement(File sourceFile, String presetName) {
+        if (sourceFile == null || !sourceFile.exists()) {
+            return null;
+        }
+        HudElement el = loadElementFromFile(sourceFile);
+        if (el == null) {
+            return null;
+        }
+
+        File presetDir = new File(getPresetsDir(), presetName);
+        presetDir.mkdirs();
+
+        String id = el.getId();
+        if (id == null || id.isEmpty()) {
+            String name = sourceFile.getName();
+            if (name.endsWith(".svhe")) {
+                name = name.substring(0, name.length() - 5);
+            }
+            id = name.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+            el.setId(id);
+        }
+
+        if (HudRegistry.get(id) != null) {
+            id = id + "_" + (System.currentTimeMillis() % 10000);
+            el.setId(id);
+        }
+
+        File targetFile = new File(presetDir, id + ".svhe");
+        saveElementToFile(targetFile, el);
+        return el;
     }
 
     public static void deletePreset(String presetName) {

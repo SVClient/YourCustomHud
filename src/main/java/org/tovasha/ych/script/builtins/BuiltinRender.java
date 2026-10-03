@@ -143,18 +143,17 @@ public class BuiltinRender implements ScriptNamespace {
         });
 
         registerMethod("drawImage", args -> {
-            if (graphics != null && args.size() >= 5) {
+            if (graphics != null && args.size() >= 3) {
                 String path = String.valueOf(args.get(0));
+                if (path == null || path.isEmpty()) return null;
                 float x = toFloat(args.get(1));
                 float y = toFloat(args.get(2));
-                float w = toFloat(args.get(3));
-                float h = toFloat(args.get(4));
-                if (path.contains("skin") || path.contains("default_player")) {
-                    PlayerSkin skin = TargetTracker.getTargetSkin();
-                    if (skin != null) {
-                        RenderUtils.drawPlayerHead(graphics, skin, x, y, Math.min(w, h));
-                        return null;
-                    }
+                float w = args.size() >= 4 ? toFloat(args.get(3)) : 16.0f;
+                float h = args.size() >= 5 ? toFloat(args.get(4)) : w;
+                PlayerSkin skin = TargetTracker.getTargetSkin();
+                if (skin != null && (path.equals(skin.body().id().toString()) || path.contains("skin") || path.contains("player"))) {
+                    RenderUtils.drawPlayerHead(graphics, skin, x, y, Math.min(w, h));
+                    return null;
                 }
                 ItemStack stack = getItemStackByName(path);
                 if (!stack.isEmpty()) {
@@ -167,18 +166,17 @@ public class BuiltinRender implements ScriptNamespace {
         });
 
         registerMethod("drawTexture", args -> {
-            if (graphics != null && args.size() >= 5) {
+            if (graphics != null && args.size() >= 3) {
                 String path = String.valueOf(args.get(0));
+                if (path == null || path.isEmpty()) return null;
                 float x = toFloat(args.get(1));
                 float y = toFloat(args.get(2));
-                float w = toFloat(args.get(3));
-                float h = toFloat(args.get(4));
-                if (path.contains("skin") || path.contains("default_player")) {
-                    PlayerSkin skin = TargetTracker.getTargetSkin();
-                    if (skin != null) {
-                        RenderUtils.drawPlayerHead(graphics, skin, x, y, Math.min(w, h));
-                        return null;
-                    }
+                float w = args.size() >= 4 ? toFloat(args.get(3)) : 16.0f;
+                float h = args.size() >= 5 ? toFloat(args.get(4)) : w;
+                PlayerSkin skin = TargetTracker.getTargetSkin();
+                if (skin != null && (path.equals(skin.body().id().toString()) || path.contains("skin") || path.contains("player"))) {
+                    RenderUtils.drawPlayerHead(graphics, skin, x, y, Math.min(w, h));
+                    return null;
                 }
                 ItemStack stack = getItemStackByName(path);
                 if (!stack.isEmpty()) {
@@ -203,32 +201,6 @@ public class BuiltinRender implements ScriptNamespace {
             return null;
         });
 
-        registerMethod("drawTargetHead", args -> {
-            if (graphics != null && args.size() >= 3) {
-                float x = toFloat(args.get(0));
-                float y = toFloat(args.get(1));
-                float size = toFloat(args.get(2));
-                PlayerSkin skin = TargetTracker.getTargetSkin();
-                if (skin != null) {
-                    RenderUtils.drawPlayerHead(graphics, skin, x, y, size);
-                }
-            }
-            return null;
-        });
-
-        registerMethod("drawHead", args -> {
-            if (graphics != null && args.size() >= 3) {
-                float x = toFloat(args.get(0));
-                float y = toFloat(args.get(1));
-                float size = toFloat(args.get(2));
-                PlayerSkin skin = TargetTracker.getTargetSkin();
-                if (skin != null) {
-                    RenderUtils.drawPlayerHead(graphics, skin, x, y, size);
-                }
-            }
-            return null;
-        });
-
         registerMethod("drawItem", args -> {
             if (graphics != null && args.size() >= 3) {
                 String itemName = String.valueOf(args.get(0));
@@ -236,32 +208,6 @@ public class BuiltinRender implements ScriptNamespace {
                 float y = toFloat(args.get(2));
                 float size = args.size() >= 4 ? toFloat(args.get(3)) : 16.0f;
                 ItemStack stack = getItemStackByName(itemName);
-                if (!stack.isEmpty()) {
-                    RenderUtils.drawItem(graphics, stack, x, y, size);
-                }
-            }
-            return null;
-        });
-
-        registerMethod("drawTargetItemLeft", args -> {
-            if (graphics != null && args.size() >= 2) {
-                float x = toFloat(args.get(0));
-                float y = toFloat(args.get(1));
-                float size = args.size() >= 3 ? toFloat(args.get(2)) : 16.0f;
-                ItemStack stack = TargetTracker.getTargetLeftHandItem();
-                if (!stack.isEmpty()) {
-                    RenderUtils.drawItem(graphics, stack, x, y, size);
-                }
-            }
-            return null;
-        });
-
-        registerMethod("drawTargetItemRight", args -> {
-            if (graphics != null && args.size() >= 2) {
-                float x = toFloat(args.get(0));
-                float y = toFloat(args.get(1));
-                float size = args.size() >= 3 ? toFloat(args.get(2)) : 16.0f;
-                ItemStack stack = TargetTracker.getTargetRightHandItem();
                 if (!stack.isEmpty()) {
                     RenderUtils.drawItem(graphics, stack, x, y, size);
                 }

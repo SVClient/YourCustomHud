@@ -127,10 +127,11 @@ public class PresetBarWidget {
     }
 
     private void drawChevron(GuiGraphics graphics, int cx, int cy, boolean left, int color) {
-        int dir = left ? -1 : 1;
+        int dir = left ? 1 : -1;
+        int tipX = left ? cx - 2 : cx + 2;
         for (int i = 0; i < 4; i++) {
-            graphics.fill(cx + i * dir, cy - i, cx + i * dir + 1, cy - i + 1, color);
-            graphics.fill(cx + i * dir, cy + i, cx + i * dir + 1, cy + i + 1, color);
+            graphics.fill(tipX + i * dir, cy - i, tipX + i * dir + 1, cy - i + 1, color);
+            graphics.fill(tipX + i * dir, cy + i, tipX + i * dir + 1, cy + i + 1, color);
         }
     }
 
