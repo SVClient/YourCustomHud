@@ -1,0 +1,15 @@
+{
+  "key.yourcustomhud.open_editor": "Открыть редактор HUD",
+  "category.yourcustomhud.main": "YourCustomHud",
+  "yourcustomhud.editor.title": "Редактор HUD",
+  "yourcustomhud.preview.title": "Предпросмотр HUD",
+  "yourcustomhud.params.title": "params",
+  "yourcustomhud.variables.title": "variables",
+  "yourcustomhud.params.select_element": "Выберите элемент для просмотра параметров",
+  "yourcustomhud.editor.space": "Редактор",
+  "text.autoconfig.yourcustomhud.title": "Настройки YourCustomHud",
+  "text.autoconfig.yourcustomhud.option.enabled": "Включено",
+  "text.autoconfig.yourcustomhud.option.renderAboveAll": "Отрисовывать поверх всех окон",
+  "text.autoconfig.yourcustomhud.option.lightTheme": "Светлая тема",
+  "text.autoconfig.yourcustomhud.option.activePreset": "Активный пресет"
+}

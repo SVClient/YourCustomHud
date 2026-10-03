@@ -1,0 +1,15 @@
+{
+  "key.yourcustomhud.open_editor": "Open HUD Editor",
+  "category.yourcustomhud.main": "YourCustomHud",
+  "yourcustomhud.editor.title": "HUD Editor",
+  "yourcustomhud.preview.title": "HUD Preview",
+  "yourcustomhud.params.title": "params",
+  "yourcustomhud.variables.title": "variables",
+  "yourcustomhud.params.select_element": "Select an element to view params",
+  "yourcustomhud.editor.space": "Editor",
+  "text.autoconfig.yourcustomhud.title": "YourCustomHud Config",
+  "text.autoconfig.yourcustomhud.option.enabled": "Enabled",
+  "text.autoconfig.yourcustomhud.option.renderAboveAll": "Render Above All Screens",
+  "text.autoconfig.yourcustomhud.option.lightTheme": "Light Theme",
+  "text.autoconfig.yourcustomhud.option.activePreset": "Active Preset"
+}

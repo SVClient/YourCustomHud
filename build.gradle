@@ -22,6 +22,9 @@ dependencies {
 	modImplementation "maven.modrinth:cloth-config:${project.cloth_config_version}"
 
 	modImplementation fileTree(dir: 'libs', include: ['*.jar'])
+
+	compileOnly 'org.projectlombok:lombok:1.18.42'
+	annotationProcessor 'org.projectlombok:lombok:1.18.42'
 }
 
 processResources {

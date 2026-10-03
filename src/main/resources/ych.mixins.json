@@ -3,7 +3,11 @@
 	"package": "org.tovasha.ych.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-
+		"GuiMixin",
+		"ScreenMixin",
+		"KeyboardHandlerMixin",
+		"GuiGraphicsMixin",
+		"MouseHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
