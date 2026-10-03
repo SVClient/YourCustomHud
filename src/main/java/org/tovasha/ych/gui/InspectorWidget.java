@@ -142,6 +142,8 @@ public class InspectorWidget {
         items.add(new VarItem("Variables.biome", String.valueOf(builtinVariables.getProperty("biome"))));
         items.add(new VarItem("Variables.cps", String.valueOf(builtinVariables.getProperty("cps"))));
         items.add(new VarItem("Variables.cpsRmb", String.valueOf(builtinVariables.getProperty("cpsRmb"))));
+        items.add(new VarItem("Variables.hasTarget", String.valueOf(builtinVariables.getProperty("hasTarget"))));
+        items.add(new VarItem("Variables.target", String.valueOf(builtinVariables.getProperty("target"))));
 
         for (Map.Entry<String, Supplier<Object>> e : VariableRegistry.getAll().entrySet()) {
             Object val = e.getValue() != null ? e.getValue().get() : "null";

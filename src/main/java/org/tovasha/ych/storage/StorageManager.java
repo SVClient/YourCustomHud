@@ -176,10 +176,56 @@ public class StorageManager {
         controls.setWidth(72);
         controls.setHeight(74);
 
+        HudElement targetHud = new HudElement("target", "TargetHUD",
+                "Params.width = 150;\n" +
+                "Params.height = 42;\n" +
+                "Params.font = Font.bahnschrift;\n" +
+                "\n" +
+                "if (!Variables.hasTarget) {\n" +
+                "    return;\n" +
+                "}\n" +
+                "\n" +
+                "color bg = #121214D0;\n" +
+                "color border = #2A2A32FF;\n" +
+                "color healthBg = #2A2A2EAA;\n" +
+                "color healthCol = #EF4444FF;\n" +
+                "num r = 5;\n" +
+                "\n" +
+                "Render.drawRoundedRect(0, 0, Params.width, Params.height, r, bg);\n" +
+                "Render.drawRoundedOutline(0, 0, Params.width, Params.height, r, 1.0, border);\n" +
+                "\n" +
+                "Render.drawPlayerHead(6, 6, 30);\n" +
+                "Render.drawRoundedOutline(6, 6, 30, 30, 2, 1.0, #404040FF);\n" +
+                "\n" +
+                "string targetName = Target.getName();\n" +
+                "Render.drawText(targetName, 42, 6, Font.bahnschrift, 9, #FFFFFF);\n" +
+                "\n" +
+                "num hp = Target.getHealth();\n" +
+                "num maxHp = Target.getMaxHealth();\n" +
+                "if (maxHp <= 0) { maxHp = 20; }\n" +
+                "num barW = 80;\n" +
+                "num filledW = (hp / maxHp) * barW;\n" +
+                "if (filledW > barW) { filledW = barW; }\n" +
+                "if (filledW < 0) { filledW = 0; }\n" +
+                "\n" +
+                "Render.drawRoundedRect(42, 24, barW, 8, 2, healthBg);\n" +
+                "if (filledW > 0) {\n" +
+                "    Render.drawRoundedRect(42, 24, filledW, 8, 2, healthCol);\n" +
+                "}\n" +
+                "Render.drawRoundedOutline(42, 24, barW, 8, 2, 1.0, #444444FF);\n" +
+                "Render.drawText(hp + \" HP\", 42 + barW + 5, 24, Font.bahnschrift, 8, #FF8888);\n" +
+                "Render.drawTargetItemRight(126, 5, 16);\n"
+        );
+        targetHud.setX(200);
+        targetHud.setY(150);
+        targetHud.setWidth(150);
+        targetHud.setHeight(42);
+
         saveElementToFile(new File(presetDir, "watermark.svhe"), watermark);
         saveElementToFile(new File(presetDir, "coords.svhe"), coords);
         saveElementToFile(new File(presetDir, "speed.svhe"), speed);
         saveElementToFile(new File(presetDir, "controls.svhe"), controls);
+        saveElementToFile(new File(presetDir, "target.svhe"), targetHud);
 
         PresetManifest manifest = new PresetManifest();
         manifest.setName("default");
@@ -187,6 +233,7 @@ public class StorageManager {
         manifest.getElementFiles().add("coords.svhe");
         manifest.getElementFiles().add("speed.svhe");
         manifest.getElementFiles().add("controls.svhe");
+        manifest.getElementFiles().add("target.svhe");
 
         try (FileWriter writer = new FileWriter(new File(presetDir, "preset.json"), StandardCharsets.UTF_8)) {
             GSON.toJson(manifest, writer);

@@ -17,6 +17,7 @@ import org.tovasha.ych.config.MainConfig;
 import org.tovasha.ych.event.EventBus;
 import org.tovasha.ych.event.TickEvent;
 import org.tovasha.ych.gui.HudEditorScreen;
+import org.tovasha.ych.render.TargetTracker;
 import org.tovasha.ych.storage.StorageManager;
 
 public class YourCustomHud implements ClientModInitializer {
@@ -46,6 +47,7 @@ public class YourCustomHud implements ClientModInitializer {
             while (editorKeyBinding.consumeClick()) {
                 client.setScreen(new HudEditorScreen());
             }
+            TargetTracker.update();
             EVENT_BUS.post(new TickEvent());
             HudRegistry.tickAll();
         });

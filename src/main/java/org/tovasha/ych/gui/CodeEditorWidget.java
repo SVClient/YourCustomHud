@@ -313,6 +313,8 @@ public class CodeEditorWidget {
                     case "Variables":
                     case "Key":
                     case "Keys":
+                    case "Target":
+                    case "target":
                     case "Math":
                     case "Font":
                     case "Render":

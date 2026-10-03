@@ -7,6 +7,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.phys.Vec3;
 import org.tovasha.ych.api.VariableRegistry;
 import org.tovasha.ych.render.CpsTracker;
+import org.tovasha.ych.render.TargetTracker;
 
 public class BuiltinVariables implements ScriptNamespace {
     @Override
@@ -141,6 +142,11 @@ public class BuiltinVariables implements ScriptNamespace {
             case "rmbCps":
             case "cpsRmb":
                 return (double) CpsTracker.getRmbCps();
+            case "target":
+                return TargetTracker.hasTarget() ? TargetTracker.getTargetNamespace() : null;
+            case "hasTarget":
+            case "hastarget":
+                return TargetTracker.hasTarget();
             default:
                 if (VariableRegistry.has(name)) {
                     return VariableRegistry.get(name);

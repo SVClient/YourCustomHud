@@ -145,6 +145,22 @@ switch (Variables.weather) {
 - `Variables.day` (`num`) — счетчик прожитых игровых дней.
 - `Variables.weather` (`string`) — погода («Ясно», «Дождь», «Гроза»).
 - `Variables.isRaining` / `Variables.isThundering` / `Variables.isClear` (`bool`) — состояние осадков.
+- `Variables.hasTarget` (`bool`) — `true`, если в прицеле есть цель в пределах 6 блоков.
+- `Variables.target` (`Target`) — объект текущей цели (или `null`, если цели нет).
+
+### 4.3. `Target` — Текущая цель (игрок или моб)
+Когда прицел направлен на цель, она автоматически захватывается. Цель удерживается, пока она находится в радиусе **6 блоков**; при выходе из радиуса или смерти цель сбрасывается.
+Доступные методы и свойства (можно вызывать с `()` или обращаться напрямую):
+- `Target.getName()` / `Target.name` (`string`) — имя игрока или сущности.
+- `Target.getHealth()` / `Target.health` (`num`) — текущее здоровье цели.
+- `Target.getMaxHealth()` / `Target.maxHealth` (`num`) — максимальное здоровье цели (по умолчанию 20.0).
+- `Target.getDistance()` / `Target.distance` (`num`) — расстояние до цели в блоках.
+- `Target.getHeadTexture()` / `Target.headTexture` (`string`) — текстура скина игрока (или скин по умолчанию).
+- `Target.getLeftHandItemTexture()` (`string`) — идентификатор предмета в левой руке (например, `"minecraft:totem_of_undying"`).
+- `Target.getRightHandItemTexture()` (`string`) — идентификатор предмета в правой руке (например, `"minecraft:diamond_sword"`).
+- `Target.getScreenX()` (`num`) — 2D X-координата проекции цели на экране интерфейса.
+- `Target.getScreenY()` (`num`) — 2D Y-координата проекции цели на экране интерфейса.
+- `Target.exists` / `Target.isValid()` (`bool`) — проверка наличия активной цели.
 
 ### 4.3. `Params` — Параметры контейнера HUD
 - `Params.x`, `Params.y` — координаты верхнего левого угла элемента на экране.
@@ -255,6 +271,59 @@ Render.drawRoundedRect(36, 48, 32, 20, r, colRmb);
 Render.drawRoundedOutline(36, 48, 32, 20, r, 1.0, borderCol);
 Render.drawText("RMB", 42, 51, Font.code, 8, txtRmb);
 Render.drawText(Variables.rmbCps + "", 46, 59, Font.code, 7, txtRmb);
+```
+
+### 5.2. TargetHUD (Индикатор цели с головой, здоровьем и предметом)
+
+Отображается только тогда, когда игрок смотрит на цель (или удерживает её в пределах 6 блоков):
+
+```javascript
+Params.width = 150;
+Params.height = 42;
+Params.font = Font.bahnschrift;
+
+if (!Variables.hasTarget) {
+    return;
+}
+
+color bg = #121214D0;
+color border = #2A2A32FF;
+color healthBg = #2A2A2EAA;
+color healthCol = #EF4444FF;
+num r = 5;
+
+// Фон и обводка карточки
+Render.drawRoundedRect(0, 0, Params.width, Params.height, r, bg);
+Render.drawRoundedOutline(0, 0, Params.width, Params.height, r, 1.0, border);
+
+// 3D Голова игрока со вторым слоем (шляпой)
+Render.drawPlayerHead(6, 6, 30);
+Render.drawRoundedOutline(6, 6, 30, 30, 2, 1.0, #404040FF);
+
+// Имя цели
+string targetName = Target.getName();
+Render.drawText(targetName, 42, 6, Font.bahnschrift, 9, #FFFFFF);
+
+// Полоска здоровья
+num hp = Target.getHealth();
+num maxHp = Target.getMaxHealth();
+if (maxHp <= 0) { maxHp = 20; }
+num barW = 80;
+num filledW = (hp / maxHp) * barW;
+if (filledW > barW) { filledW = barW; }
+if (filledW < 0) { filledW = 0; }
+
+Render.drawRoundedRect(42, 24, barW, 8, 2, healthBg);
+if (filledW > 0) {
+    Render.drawRoundedRect(42, 24, filledW, 8, 2, healthCol);
+}
+Render.drawRoundedOutline(42, 24, barW, 8, 2, 1.0, #444444FF);
+
+// Текст здоровья
+Render.drawText(hp + " HP", 42 + barW + 5, 24, Font.bahnschrift, 8, #FF8888);
+
+// Предмет в правой руке цели
+Render.drawTargetItemRight(126, 5, 16);
 ```
 
 ---

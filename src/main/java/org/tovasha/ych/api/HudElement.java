@@ -11,11 +11,13 @@ import org.tovasha.ych.script.Parser;
 import org.tovasha.ych.script.ScriptDiagnostic;
 import org.tovasha.ych.script.Token;
 import org.tovasha.ych.script.ast.ProgramNode;
+import org.tovasha.ych.render.TargetTracker;
 import org.tovasha.ych.script.builtins.BuiltinFont;
 import org.tovasha.ych.script.builtins.BuiltinKey;
 import org.tovasha.ych.script.builtins.BuiltinMath;
 import org.tovasha.ych.script.builtins.BuiltinParams;
 import org.tovasha.ych.script.builtins.BuiltinRender;
+import org.tovasha.ych.script.builtins.BuiltinTarget;
 import org.tovasha.ych.script.builtins.BuiltinVariables;
 
 @Getter
@@ -89,6 +91,9 @@ public class HudElement {
         interpreter.registerGlobal("Math", new BuiltinMath());
         interpreter.registerGlobal("Font", new BuiltinFont(this));
         interpreter.registerGlobal("Render", builtinRender);
+        BuiltinTarget builtinTarget = TargetTracker.getTargetNamespace();
+        interpreter.registerGlobal("Target", builtinTarget);
+        interpreter.registerGlobal("target", builtinTarget);
 
         try {
             interpreter.interpret(program);

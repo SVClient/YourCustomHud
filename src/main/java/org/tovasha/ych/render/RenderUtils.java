@@ -5,10 +5,13 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.PlayerSkin;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix3x2fStack;
 import org.tovasha.ych.api.FontRegistry;
 
@@ -32,6 +35,25 @@ public class RenderUtils {
         Identifier textureId = CustomTextureManager.getOrLoadTexture(path);
         if (textureId != null) {
             graphics.blit(textureId, (int) x, (int) y, (int) (x + w), (int) (y + h), 0.0f, 1.0f, 0.0f, 1.0f);
+        }
+    }
+
+    public static void drawPlayerHead(GuiGraphics graphics, PlayerSkin skin, float x, float y, float size) {
+        if (graphics == null || skin == null) return;
+        PlayerFaceRenderer.draw(graphics, skin, (int) x, (int) y, (int) size);
+    }
+
+    public static void drawItem(GuiGraphics graphics, ItemStack stack, float x, float y, float size) {
+        if (graphics == null || stack == null || stack.isEmpty()) return;
+        if (Math.abs(size - 16.0f) < 0.1f) {
+            graphics.renderItem(stack, (int) x, (int) y);
+        } else {
+            graphics.pose().pushMatrix();
+            graphics.pose().translate(x, y);
+            float scale = size / 16.0f;
+            graphics.pose().scale(scale, scale);
+            graphics.renderItem(stack, 0, 0);
+            graphics.pose().popMatrix();
         }
     }
 
