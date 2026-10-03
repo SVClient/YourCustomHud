@@ -3,9 +3,11 @@ package org.tovasha.ych.render;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Style;
@@ -32,15 +34,51 @@ public class RenderUtils {
     public static final Identifier FONT_GEORGIA = Identifier.fromNamespaceAndPath("ych", "georgia");
 
     public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h) {
+        drawImage(graphics, path, x, y, w, h, 0.0f);
+    }
+
+    public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h, float radius) {
         Identifier textureId = CustomTextureManager.getOrLoadTexture(path);
-        if (textureId != null) {
-            graphics.blit(textureId, (int) x, (int) y, (int) (x + w), (int) (y + h), 0.0f, 1.0f, 0.0f, 1.0f);
+        if (textureId == null) return;
+        drawTexture(graphics, textureId, x, y, w, h, radius, 0.0f, 1.0f, 0.0f, 1.0f, 0xFFFFFFFF);
+    }
+
+    public static void drawTexture(GuiGraphics graphics, Identifier textureId, float x, float y, float w, float h, float radius,
+                                   float u0, float u1, float v0, float v1, int color) {
+        if (graphics == null || textureId == null) return;
+        if (radius <= 0.5f) {
+            graphics.blit(textureId, (int) x, (int) y, (int) (x + w), (int) (y + h), u0, u1, v0, v1);
+            return;
         }
+
+        if (graphics instanceof GuiGraphicsBridge bridge) {
+            AbstractTexture tex = Minecraft.getInstance().getTextureManager().getTexture(textureId);
+            if (tex != null && tex.getTextureView() != null) {
+                TextureSetup setup = TextureSetup.singleTexture(tex.getTextureView(), tex.getSampler());
+                GuiRenderState state = bridge.ych$getGuiRenderState();
+                ScreenRectangle scissor = bridge.ych$getCurrentScissor();
+                state.submitGuiElement(new RoundedTextureRenderState(setup, graphics.pose(), x, y, w, h, radius, u0, u1, v0, v1, color, scissor));
+                return;
+            }
+        }
+
+        graphics.blit(textureId, (int) x, (int) y, (int) (x + w), (int) (y + h), u0, u1, v0, v1);
     }
 
     public static void drawPlayerHead(GuiGraphics graphics, PlayerSkin skin, float x, float y, float size) {
+        drawPlayerHead(graphics, skin, x, y, size, 0.0f);
+    }
+
+    public static void drawPlayerHead(GuiGraphics graphics, PlayerSkin skin, float x, float y, float size, float radius) {
         if (graphics == null || skin == null) return;
-        PlayerFaceRenderer.draw(graphics, skin, (int) x, (int) y, (int) size);
+        if (radius <= 0.5f) {
+            PlayerFaceRenderer.draw(graphics, skin, (int) x, (int) y, (int) size);
+            return;
+        }
+
+        Identifier skinId = skin.body().id();
+        drawTexture(graphics, skinId, x, y, size, size, radius, 8.0f / 64.0f, 16.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 0xFFFFFFFF);
+        drawTexture(graphics, skinId, x, y, size, size, radius, 40.0f / 64.0f, 48.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 0xFFFFFFFF);
     }
 
     public static void drawItem(GuiGraphics graphics, ItemStack stack, float x, float y, float size) {
@@ -112,6 +150,25 @@ public class RenderUtils {
         graphics.fill(xi, yi + hi - ti, xi + wi, yi + hi, color);
         graphics.fill(xi, yi + ti, xi + ti, yi + hi - ti, color);
         graphics.fill(xi + wi - ti, yi + ti, xi + wi, yi + hi - ti, color);
+    }
+
+    public static void drawCircle(GuiGraphics graphics, float cx, float cy, float radius, int color) {
+        drawRoundedRect(graphics, cx - radius, cy - radius, radius * 2.0f, radius * 2.0f, radius, color);
+    }
+
+    public static void drawRing(GuiGraphics graphics, float cx, float cy, float radius, float thickness, int color) {
+        drawRoundedOutline(graphics, cx - radius, cy - radius, radius * 2.0f, radius * 2.0f, radius, thickness, color);
+    }
+
+    public static void drawArc(GuiGraphics graphics, float cx, float cy, float radius, float thickness, double startAngle, double endAngle, int color) {
+        if (graphics instanceof GuiGraphicsBridge bridge) {
+            GuiRenderState state = bridge.ych$getGuiRenderState();
+            ScreenRectangle scissor = bridge.ych$getCurrentScissor();
+            state.submitGuiElement(new ArcRenderState(graphics.pose(), cx, cy, radius, thickness, startAngle, endAngle, color, scissor));
+            return;
+        }
+
+        drawRing(graphics, cx, cy, radius, thickness, color);
     }
 
     public static void drawText(GuiGraphics graphics, String text, float x, float y, int color) {

@@ -1,427 +1,381 @@
-# YourCustomHud (SVClient) — Полная документация
+# YourCustomHud — Complete Documentation
 
-Данная документация предназначена для пользователей (людей) и автономных ИИ-агентов, создающих и модифицирующих HUD-элементы и скрипты мода **YourCustomHud**.
-
----
-
-# Часть 1. Руководство для человека (Human Guide)
-
-## 1. Введение и концепция
-**YourCustomHud** — это гибкий клиентский мод для Minecraft (Fabric 1.21.11), позволяющий создавать любые элементы интерфейса (HUD) прямо в игре с помощью встроенного интерпретируемого скриптового языка `.svhe`.
-
-Ключевые возможности:
-- **Hot-Reload**: код компилируется и исполняется на лету каждый кадр.
-- **Встроенный редактор**: визуальный редактор с подсветкой синтаксиса, нумерацией строк, навигацией, вставкой из буфера обмена и боковой панелью инспектора.
-- **Скругления и шейдеры**: поддержка скругленных прямоугольников, обводок с регулируемой толщиной и градиентов через OpenGL шейдеры.
-- **Кастомные шрифты**: поддержка векторных TrueType шрифтов (`code`, `arial`, `arial_black`, `consolas`, `jetbrains_mono`).
-- **Текстуры**: рендер локальных изображений PNG/JPG/WebP через `locate loc = "C:\\path\\to\\image.png"`.
+This documentation is designed for human users and autonomous AI coding agents creating, modifying, and scripting HUD elements using **YourCustomHud**.
 
 ---
 
-## 2. Быстрый старт
-1. Нажмите клавишу открытия меню HUD (по умолчанию **Right Shift**).
-2. Выберите элемент в списке или создайте новый, нажав **+**.
-3. Редактируйте скрипт в левой части экрана:
-   - Вводите код, используйте стандартные сочетания клавиш (`Ctrl+C`, `Ctrl+V`, `Ctrl+A`, `Ctrl+Z`).
-   - Вставка из буфера обмена поддерживает многострочный текст и очищает невидимые символы возврата каретки.
-4. Перетаскивайте элемент мышью в превью или на основном экране для изменения его координат.
-5. Нажмите **Escape** для закрытия редактора — настройки и скрипты сохраняются автоматически в папку `config/yourcustomhud/`.
+# Part 1. User & Developer Guide
+
+## 1. Introduction and Overview
+**YourCustomHud** is a powerful client-side HUD modification for Minecraft (Fabric 1.21.11). It allows you to build, customize, and animate any HUD element directly in-game using the embedded lightweight interpreted scripting language (`.svhe`).
+
+Key features:
+- **Hot-Reloading**: Scripts are compiled on the fly and executed smoothly every frame.
+- **In-Game Code Editor**: Full-featured visual code editor with line numbers, code highlighting, error diagnostics, cursor navigation, and multi-line clipboard paste.
+- **Advanced 2D/3D Rendering**: Anti-aliased rounded rectangles, borders with custom thickness, gradient fills, perfect circles, rings, circular progress arcs, and rounded/circular texture clipping via GPU render states.
+- **Target Tracking (`Target`)**: Automatic tracking of crosshair entities up to 6 blocks with 3D-to-2D screen projection (`getScreenX`, `getScreenY`), skin head textures, hand items, and health data.
+- **Rich Font Library**: TrueType vector typography (`bahnschrift`, `modern`, `code`, `impact`, `arial`, `arialblack`, `cascadia`, `comic`, etc.).
+- **Drag-and-Drop (`.svhe`, `.svhud`, `.zip`)**: Drop files straight from your operating system's file manager into the Minecraft window to import elements or presets immediately.
 
 ---
 
-## 3. Синтаксис языка .svhe
+## 2. Quick Start
+1. Press the HUD Editor key (default: **Right Shift**).
+2. Choose an element in the tab bar or press **`+`** to create a new one.
+3. Edit your code in the code editor on the right:
+   - Use standard editor shortcuts (`Ctrl+C`, `Ctrl+V`, `Ctrl+A`, `Ctrl+Z`, `Backspace`, `Enter`, Arrow keys).
+   - Pasting handles multi-line blocks cleanly without carriage-return artifacts.
+4. Drag elements with your mouse in the preview area to reposition them (`Params.x`, `Params.y`).
+5. Press **Escape** to close the editor — all changes and `.svhe` files are saved automatically in `.minecraft/yourcustomhud/presets/<preset>/`.
 
-### 3.1. Переменные и типы данных
-Язык поддерживает явную типизацию и динамическое присваивание:
+---
+
+## 3. Scripting Language Syntax (`.svhe`)
+
+### 3.1. Variable Declaration & Types
+The language supports dynamic variables declared with `let`, `num`, `string`, `bool`, or `color`:
 ```javascript
-num size = 20;
-num speed = 1.5;
-string title = "My HUD";
+let count = 10;
+num speed = 2.5;
+string title = "HUD";
 bool active = true;
-color bg = #202020CC; // или 0xCC202020, или Render.color(32, 32, 32, 204)
-locate icon = "C:\\Users\\User\\Pictures\\icon.png";
+color bg = #121214D0; // Hex color with alpha: #RRGGBBAA or #RRGGBB or 0xAARRGGBB
 ```
 
-### 3.2. Арифметические и логические операторы
-- Арифметика: `+`, `-`, `*`, `/`, `%`
-- Сокращенные присваивания: `+=`, `-=`, `*=`, `/=`, `++`, `--`
-- Сравнение: `==`, `!=`, `<`, `<=`, `>`, `>=`
-- Логика: `&&`, `||`, `!`
-- Строковая конкатенация: `"FPS: " + Variables.fps`
+### 3.2. Arithmetic and Logical Operators
+- Arithmetic: `+`, `-`, `*`, `/`, `%`
+- Compound assignments: `+=`, `-=`, `*=`, `/=`, `++`, `--`
+- Relational: `==`, `!=`, `<`, `<=`, `>`, `>=`
+- Logical: `&&`, `||`, `!`
+- String concatenation: `"Speed: " + Variables.speed + " m/s"`
 
-### 3.3. Управляющие конструкции
+### 3.3. Control Flow
 
-#### Условия `if` / `else if` / `else`:
+#### `if` / `else if` / `else`:
 ```javascript
-if (Key.w) {
-    Render.drawRoundedRect(0, 0, 20, 20, 4, #55FF55FF);
+if (Variables.hasTarget) {
+    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 4, #22C55EAA);
 } else {
-    Render.drawRoundedRect(0, 0, 20, 20, 4, #202020AA);
+    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 4, #121214D0);
 }
 ```
 
-#### Циклы `for` и `while`:
+#### Loops (`for` and `while`):
 ```javascript
 for (num i = 0; i < 5; i++) {
-    Render.drawRect(i * 12, 0, 10, 10, #FFFFFF);
+    Render.drawRect(Params.x + i * 14, Params.y, 10, 10, #FFFFFF);
 }
 
-num count = 0;
-while (count < 3) {
-    Render.drawText("Row " + count, 0, count * 12, #FFFFFF);
-    count++;
+num n = 0;
+while (n < 3) {
+    Render.drawText("Line " + n, Params.x, Params.y + n * 12, #FFFFFF);
+    n++;
 }
 ```
 
-#### Конструкция `switch / case`:
-Поддерживает любые типы (строки, числа, булевы), перечисление нескольких значений через запятую или несколько меток подряд, а также нечувствительность к регистру строк:
+#### `switch / case`:
+Supports string case-insensitivity, multiple labels separated by commas, and default fallback:
 ```javascript
 switch (Variables.weather) {
-    case "Thunder", "Гроза":
-        Render.drawText("ОПАСНО: Гроза!", 0, 0, #FF5555);
+    case "Thunder", "Storm":
+        Render.drawText("Warning: Thunderstorm!", Params.x, Params.y, #EF4444);
         break;
-    case "Rain", "Дождь":
-        Render.drawText("Идет дождь", 0, 0, #55FFFF);
+    case "Rain":
+        Render.drawText("Raining", Params.x, Params.y, #3B82F6);
         break;
     default:
-        Render.drawText("Погода ясная", 0, 0, #FFFFFF);
+        Render.drawText("Clear Weather", Params.x, Params.y, #FFFFFF);
         break;
+}
+```
+
+### 3.4. Functions and `main()`
+Code can either be written directly at the top level or wrapped inside `fn main()`:
+```javascript
+fn main() {
+    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 6, 0xAA000000);
+    Render.drawText("Hello World", Params.x + 8, Params.y + 8, 0xFFFFFFFF);
 }
 ```
 
 ---
 
-## 4. Встроенные пространства имен
+## 4. Built-in Namespaces
 
-### 4.1. `Key` (или `Keys`) — Состояние любых клавиш и кнопок мыши
-Возвращают `true`, если соответствующая клавиша нажата, и `false`, если отпущена. Поддерживаются абсолютно все клавиши клавиатуры и мыши:
-
-- **Движение и основные действия:**
-  - `Key.w`, `Key.a`, `Key.s`, `Key.d` (или `Key.forward`, `Key.back`, `Key.left`, `Key.right`)
-  - `Key.space` (или `Key.jump`)
-  - `Key.shift` (или `Key.sneak`, `Key.lshift`, `Key.rshift`)
-  - `Key.sprint` (или `Key.ctrl`, `Key.lctrl`, `Key.rctrl`)
-  - `Key.alt` (или `Key.lalt`, `Key.ralt`)
-  - `Key.tab`, `Key.enter`, `Key.esc`, `Key.backspace`
-  - `Key.capslock`, `Key.numlock`, `Key.scrolllock`
-- **Все буквы алфавита (A-Z):**
-  - `Key.q`, `Key.e`, `Key.r`, `Key.t`, `Key.y`, `Key.u`, `Key.i`, `Key.o`, `Key.p`
-  - `Key.f`, `Key.g`, `Key.h`, `Key.j`, `Key.k`, `Key.l`
-  - `Key.z`, `Key.x`, `Key.c`, `Key.v`, `Key.b`, `Key.n`, `Key.m`
-- **Мышь:**
-  - `Key.lmb` (или `Key.attack`, `Key.leftClick`, `Key.mouse1`)
-  - `Key.rmb` (или `Key.use`, `Key.rightClick`, `Key.mouse2`)
-  - `Key.mmb` (или `Key.middle`, `Key.middleClick`, `Key.mouse3`, `Key.pick`)
-  - `Key.mouse4`, `Key.mouse5` (боковые кнопки)
-- **Цифры и Numpad:**
-  - `Key.0` .. `Key.9` (или `Key.num0` .. `Key.num9`)
-  - `Key.numpad0` .. `Key.numpad9`
-  - `Key.numpadAdd`, `Key.numpadSub`, `Key.numpadMul`, `Key.numpadDiv`, `Key.numpadEnter`
-- **Функциональные клавиши:**
-  - `Key.f1` .. `Key.f12` (и вплоть до `Key.f25`)
-- **Стрелки и навигация:**
-  - `Key.up`, `Key.down`, `Key.left`, `Key.right`
-  - `Key.insert`, `Key.delete`, `Key.home`, `Key.end`, `Key.pageup`, `Key.pagedown`
-- **Игровые бинды Minecraft:**
-  - `Key.inventory` (или `Key.inv`), `Key.drop`, `Key.chat`, `Key.playerlist`, `Key.perspective`
-- **Динамическая проверка:**
-  - `Key.isDown("любое_имя_или_код")` — например, `Key.isDown("f")` или `Key.down(GLFW_KEY)`.
-
-> **Примечание:** Поля `Key.*` не отображаются в боковых подсказках переменных, чтобы не засорять инспектор. Можно использовать как `Key.w`, так и `Keys.w`.
-
-### 4.2. `Variables` — Данные игрока и мира
-- `Variables.fps` (`num`) — текущий FPS клиента.
-- `Variables.ping` (`num`) — пинг до сервера в миллисекундах.
-- `Variables.cps` / `Variables.lmbCps` (`num`) — клики в секунду для ЛКМ (окно 1000 мс).
-- `Variables.rmbCps` (`num`) — клики в секунду для ПКМ.
-- `Variables.speed` (`num`) — полная скорость игрока (блоков/сек).
-- `Variables.horizontalSpeed` (`num`) — горизонтальная скорость.
-- `Variables.verticalSpeed` (`num`) — вертикальная скорость.
-- `Variables.posX`, `Variables.posY`, `Variables.posZ` (`num`) — координаты игрока.
-- `Variables.biome` (`string`) — текущий биом.
-- `Variables.player` / `Variables.nick` (`string`) — никнейм игрока.
-- `Variables.time` (`string`) — время суток строкой («Утро», «День», «Закат», «Ночь»).
-- `Variables.isDay` / `Variables.isNight` (`bool`) — флаги дня и ночи.
-- `Variables.day` (`num`) — счетчик прожитых игровых дней.
-- `Variables.weather` (`string`) — погода («Ясно», «Дождь», «Гроза»).
-- `Variables.isRaining` / `Variables.isThundering` / `Variables.isClear` (`bool`) — состояние осадков.
-- `Variables.hasTarget` (`bool`) — `true`, если в прицеле есть цель в пределах 6 блоков.
-- `Variables.target` (`Target`) — объект текущей цели (или `null`, если цели нет).
-
-### 4.3. `Target` — Текущая цель (игрок или моб)
-Когда прицел направлен на цель, она автоматически захватывается. Цель удерживается, пока она находится в радиусе **6 блоков**; при выходе из радиуса или смерти цель сбрасывается.
-Доступные методы и свойства (можно вызывать с `()` или обращаться напрямую):
-- `Target.getName()` / `Target.name` (`string`) — имя игрока или сущности.
-- `Target.getHealth()` / `Target.health` (`num`) — текущее здоровье цели.
-- `Target.getMaxHealth()` / `Target.maxHealth` (`num`) — максимальное здоровье цели (по умолчанию 20.0).
-- `Target.getDistance()` / `Target.distance` (`num`) — расстояние до цели в блоках.
-- `Target.getHeadTexture()` / `Target.headTexture` (`string`) — текстура скина игрока (или скин по умолчанию).
-- `Target.getLeftHandItemTexture()` (`string`) — идентификатор предмета в левой руке (например, `"minecraft:totem_of_undying"`).
-- `Target.getRightHandItemTexture()` (`string`) — идентификатор предмета в правой руке (например, `"minecraft:diamond_sword"`).
-- `Target.getScreenX()` (`num`) — 2D X-координата проекции цели на экране интерфейса.
-- `Target.getScreenY()` (`num`) — 2D Y-координата проекции цели на экране интерфейса.
-- `Target.exists` / `Target.isValid()` (`bool`) — проверка наличия активной цели.
-
-### 4.3. `Params` — Параметры контейнера HUD
-- `Params.x`, `Params.y` — координаты верхнего левого угла элемента на экране.
-- `Params.width`, `Params.height` — ширина и высота элемента.
-- `Params.font` — шрифт по умолчанию для элемента.
-- `Params.scale` — базовый масштаб элемента.
-
-### 4.4. `Render` — Методы отрисовки
-- `Render.drawRect(x, y, w, h, color)` — залитый прямоугольник.
-- `Render.drawRoundedRect(x, y, w, h, radius, color)` — прямоугольник со скругленными углами.
-- `Render.drawOutline(x, y, w, h, [thickness], color)` — контур прямоугольника. По умолчанию `thickness = 1.0`.
-- `Render.drawRoundedOutline(x, y, w, h, radius, [thickness], color)` — скругленный контур с заданной толщиной и радиусом.
-- `Render.drawGradientRect(x, y, w, h, color1, color2, isHorizontal)` — градиентный прямоугольник.
-- `Render.drawText(text, x, y, [font], [size], color)` — вывод текста:
-  - `Render.drawText(text, x, y, color)` — стандартный шрифт, размер 9.0.
-  - `Render.drawText(text, x, y, size, color)` — стандартный шрифт с кастомным кеглем.
-  - `Render.drawText(text, x, y, font, color)` — кастомный шрифт, размер 9.0.
-  - `Render.drawText(text, x, y, font, size, color)` — кастомный шрифт и кастомный размер.
-- `Render.drawImage(locate, x, y, w, h, [color])` — отрисовка локального изображения по переменной типа `locate`.
-- `Render.color(r, g, b, [a])` — создание цвета из RGBA компонент (0-255).
-
-### 4.5. `Font` — Встроенные шрифты и типографика
-Шрифт можно указывать через константу `Font.<name>` или обычной строкой `"<name>"`:
-- `Font.default` (`"default"`) — ванильный пиксельный шрифт Minecraft.
-- `Font.bahnschrift` (`"bahnschrift"`) — чистый геометрический DIN-шрифт (популярен в Lunar, Badlion, Feather и PvP-клиентах).
-- `Font.impact` (`"impact"`) — массивный, плотный акцентный шрифт Impact.
-- `Font.comic` / `Font.comicSans` (`"comic"`) — Comic Sans.
-- `Font.arial` (`"arial"`) — классический Arial.
-- `Font.arialBlack` (`"arialblack"`) — сверхжирный Arial Black.
-- `Font.modern` (`"modern"`) — интерфейсный Segoe UI.
-- `Font.code` / `Font.consolas` (`"code"`) — моноширинный Consolas для программирования и четких таблиц.
-- `Font.cascadia` (`"cascadia"`) — современный моноширинный Cascadia Code от Microsoft.
-- `Font.tahoma` (`"tahoma"`) — четкий экранный шрифт Tahoma.
-- `Font.verdana` (`"verdana"`) — широкий и хорошо читаемый на маленьких размерах Verdana.
-- `Font.trebuchet` (`"trebuchet"`) — стильный гуманистический гротеск Trebuchet MS.
-- `Font.calibri` (`"calibri"`) — мягкий и сбалансированный Calibri.
-- `Font.georgia` (`"georgia"`) — элегантная антиква с засечками (serif), отлично подходит под фэнтези и RPG интерфейсы.
-
-#### Функции `Font`:
-- `Font.textWidth(text, [font], [size])` — возвращает ширину строки в пикселях с учетом выбранного шрифта и размера.
-- `Font.height([font], [size])` или `Font.fontHeight` — возвращает высоту шрифта.
-
-### 4.6. `Math` — Математические функции
-- `Math.sin(x)`, `Math.cos(x)`, `Math.tan(x)`
-- `Math.abs(x)`, `Math.min(a, b)`, `Math.max(a, b)`
-- `Math.sqrt(x)`, `Math.pow(a, b)`
-- `Math.round(x)`, `Math.floor(x)`, `Math.ceil(x)`
-- `Math.random()`, `Math.PI`
+### 4.1. `Key` (or `Keys`) — Input States
+Returns `true` when the corresponding physical key or mouse button is held down:
+- Movement: `Key.w`, `Key.a`, `Key.s`, `Key.d` (or `Key.forward`, `Key.back`, `Key.left`, `Key.right`)
+- Actions: `Key.space` / `Key.jump`, `Key.shift` / `Key.sneak`, `Key.sprint`, `Key.attack`, `Key.use`
+- Mouse buttons: `Key.lmb` (Left Click), `Key.rmb` (Right Click), `Key.mmb` (Middle Click)
+- Letters & numbers: `Key.q`, `Key.e`, `Key.r`, `Key.f`, `Key.c`, `Key.x`, `Key.z`, `Key.num0` .. `Key.num9`
+- Modifiers & Special: `Key.ctrl`, `Key.alt`, `Key.tab`, `Key.enter`, `Key.escape`
 
 ---
 
-## 5. Готовый пример: Controls HUD (Keystrokes + CPS)
+### 4.2. `Variables` — Player & World Statistics
+- `Variables.fps` (`num`) — Current client frame rate.
+- `Variables.ping` (`num`) — Latency to server in milliseconds.
+- `Variables.cps` / `Variables.lmbCps` (`num`) — Left-click CPS (1000ms rolling window).
+- `Variables.rmbCps` (`num`) — Right-click CPS.
+- `Variables.speed` (`num`) — Total player speed (blocks/sec).
+- `Variables.horizontalSpeed` (`num`) — Horizontal velocity (blocks/sec).
+- `Variables.verticalSpeed` (`num`) — Vertical velocity.
+- `Variables.posX`, `Variables.posY`, `Variables.posZ` (`num`) — Player world coordinates.
+- `Variables.biome` (`string`) — Current biome identifier.
+- `Variables.player` / `Variables.nick` (`string`) — Local player username.
+- `Variables.time` (`string`) — Time of day string ("Morning", "Day", "Sunset", "Night").
+- `Variables.isDay` / `Variables.isNight` (`bool`) — Day/night flags.
+- `Variables.day` (`num`) — In-game days elapsed.
+- `Variables.weather` (`string`) — Weather status ("Clear", "Rain", "Thunder").
+- `Variables.isRaining`, `Variables.isThundering`, `Variables.isClear` (`bool`) — Weather flags.
+- `Variables.hasTarget` (`bool`) — Whether a valid living target is currently tracked.
+- `Variables.target` (`Target`) — Global target object (identical to `Target`).
 
-Скопируйте данный скрипт в редактор любого элемента HUD:
+---
 
+### 4.3. `Target` — Target Tracking
+When looking at another player or mob within **6 blocks**, the entity is acquired as the active target. The target remains locked until it is farther than 6 blocks, dies, or despawns.
+
+All properties can be called as functions `Target.getName()` or properties `Target.name`:
+| Method / Property | Return Type | Description |
+|---|---|---|
+| `Target.getName()` / `Target.name` | `string` | Display name of the target entity |
+| `Target.getHealth()` / `Target.health` | `num` | Current health of the target |
+| `Target.getMaxHealth()` / `Target.maxHealth` | `num` | Maximum health of the target |
+| `Target.getDistance()` / `Target.distance` | `num` | Distance in blocks to the target |
+| `Target.getHeadTexture()` / `Target.headTexture` | `string` | Texture ID of the target's skin |
+| `Target.getRightHandItemTexture()` | `string` | Item ID in the target's main hand |
+| `Target.getLeftHandItemTexture()` | `string` | Item ID in the target's off-hand |
+| `Target.getScreenX()` / `Target.screenX` | `num` | 2D X screen projection coordinate (or `-9999` if off-screen) |
+| `Target.getScreenY()` / `Target.screenY` | `num` | 2D Y screen projection coordinate (or `-9999` if off-screen) |
+| `Target.exists` / `Target.isValid()` | `bool` | True if a target is currently acquired |
+
+---
+
+### 4.4. `Params` — HUD Element Attributes
+- `Params.x`, `Params.y` (`num`) — Top-left screen position of the element.
+- `Params.width`, `Params.height` (`num`) — Element dimensions in scaled GUI pixels.
+- `Params.font` (`string`) — Default font identifier.
+- `Params.screenWidth`, `Params.screenHeight` (`num`) — Current window scaled dimensions.
+- `Params.rainbowColor1`, `Params.rainbowColor2`, `Params.rainbowColor3` (`color`) — Animated RGB rainbow colors.
+
+---
+
+### 4.5. `Render` — Drawing Methods
+
+#### Shapes & Outlines:
+- `Render.drawRect(x, y, w, h, color)` — Filled flat rectangle.
+- `Render.drawRoundedRect(x, y, w, h, radius, color)` — Filled rounded rectangle.
+- `Render.drawOutline(x, y, w, h, [thickness], color)` — Sharp rectangular border (default `thickness = 1.0`).
+- `Render.drawRoundedOutline(x, y, w, h, radius, [thickness], color)` — Rounded border with custom radius and line thickness.
+- `Render.drawGradientRect(x, y, w, h, color1, color2, isHorizontal)` — Smooth two-color linear gradient rectangle.
+
+#### Circles, Rings & Arcs:
+- `Render.drawCircle(cx, cy, radius, color)` — Perfect smooth filled circle centered at `(cx, cy)`.
+- `Render.drawRing(cx, cy, radius, thickness, color)` — Circular ring border of custom thickness.
+- `Render.drawArc(cx, cy, radius, thickness, startAngle, endAngle, color)` — Circular arc / radial progress gauge in degrees (e.g. `-90` to `-90 + progress * 360`).
+
+#### Images, Textures & Player Heads:
+- `Render.drawImage(path, x, y, w, h, [radius])` — Renders a custom texture, player skin, or item with optional **rounded corner clipping**!
+- `Render.drawRoundedImage(path, x, y, w, h, radius)` — Explicit rounded image clipping.
+- `Render.drawTexture(path, x, y, w, h, [radius])` — Alias for `drawImage`.
+- `Render.drawRoundedTexture(path, x, y, w, h, radius)` — Explicit rounded texture rendering.
+- `Render.drawPlayerHead(x, y, size, [radius])` — Renders player head (with hat layer) with optional rounded/circular clipping.
+- `Render.drawItem(itemId, x, y, [size])` — Renders an item by its registry identifier (e.g. `"minecraft:diamond_sword"`).
+
+#### Typography:
+- `Render.drawText(text, x, y, [font], [size], color)` — Draws vector/pixel text:
+  - `Render.drawText(text, x, y, color)`
+  - `Render.drawText(text, x, y, size, color)`
+  - `Render.drawText(text, x, y, font, color)`
+  - `Render.drawText(text, x, y, font, size, color)`
+
+---
+
+### 4.6. `Font` — Typography Constants
+Available vector fonts:
+- `Font.bahnschrift` (`"bahnschrift"`) — Clean geometric DIN font.
+- `Font.modern` (`"modern"`) — Sleek Segoe UI interface font.
+- `Font.code` / `Font.consolas` (`"code"`) — Monospaced developer font.
+- `Font.cascadia` (`"cascadia"`) — Modern monospaced code font.
+- `Font.impact` (`"impact"`) — Heavy condensed display font.
+- `Font.arial` (`"arial"`) — Clean standard Arial font.
+- `Font.arialBlack` (`"arialblack"`) — Ultra-bold display font.
+- `Font.comic` (`"comic"`) — Casual Comic Sans font.
+- `Font.default` (`"default"`) — Pixelated Minecraft vanilla font.
+
+---
+
+### 4.7. `Math` — Mathematical Functions
+- `Math.PI`, `Math.E`
+- `Math.sin(rad)`, `Math.cos(rad)`
+- `Math.min(a, b)`, `Math.max(a, b)`, `Math.clamp(val, min, max)`
+- `Math.abs(n)`, `Math.round(n)`, `Math.floor(n)`, `Math.ceil(n)`, `Math.random()`
+
+---
+
+## 5. Ready-to-Use Element Recipes
+
+### 5.1. Keystrokes (WASD + LMB / RMB with CPS)
 ```javascript
-Params.width = 68;
-Params.height = 70;
-Params.font = Font.code;
+Params.width = 72;
+Params.height = 74;
 
-color bg = #181818CC;
-color activeBg = #55FF55FF;
-color textCol = #FFFFFF;
-color activeText = #000000;
-color borderCol = #333333FF;
-num r = 3;
+fn drawKey(label, kx, ky, kw, kh, isPressed, subText) {
+    let bg = isPressed ? 0xCC3B82F6 : 0x66000000;
+    Render.drawRoundedRect(kx, ky, kw, kh, 4, bg);
+    Render.drawRoundedOutline(kx, ky, kw, kh, 4, 1.0, 0x44FFFFFF);
+    
+    let tw = Font.textWidth(label);
+    Render.drawText(label, kx + (kw - tw) / 2, ky + (subText != "" ? 3 : 7), 0xFFFFFFFF);
+    if (subText != "") {
+        let sw = Font.textWidth(subText);
+        Render.drawText(subText, kx + (kw - sw) / 2, ky + 13, 0xAAAAAAFF);
+    }
+}
 
-// Клавиша W (по центру сверху)
-color colW = Key.w ? activeBg : bg;
-color txtW = Key.w ? activeText : textCol;
-Render.drawRoundedRect(24, 0, 20, 20, r, colW);
-Render.drawRoundedOutline(24, 0, 20, 20, r, 1.0, borderCol);
-Render.drawText("W", 31, 6, Font.code, 9, txtW);
+fn main() {
+    let kw = 22;
+    let kh = 22;
+    let gap = 3;
+    let x0 = Params.x;
+    let y0 = Params.y;
 
-// Клавиша A (слева по центру)
-color colA = Key.a ? activeBg : bg;
-color txtA = Key.a ? activeText : textCol;
-Render.drawRoundedRect(0, 24, 20, 20, r, colA);
-Render.drawRoundedOutline(0, 24, 20, 20, r, 1.0, borderCol);
-Render.drawText("A", 7, 30, Font.code, 9, txtA);
+    drawKey("W", x0 + kw + gap, y0, kw, kh, Key.w, "");
+    
+    let r2y = y0 + kh + gap;
+    drawKey("A", x0, r2y, kw, kh, Key.a, "");
+    drawKey("S", x0 + kw + gap, r2y, kw, kh, Key.s, "");
+    drawKey("D", x0 + (kw + gap) * 2, r2y, kw, kh, Key.d, "");
 
-// Клавиша S (по центру)
-color colS = Key.s ? activeBg : bg;
-color txtS = Key.s ? activeText : textCol;
-Render.drawRoundedRect(24, 24, 20, 20, r, colS);
-Render.drawRoundedOutline(24, 24, 20, 20, r, 1.0, borderCol);
-Render.drawText("S", 31, 30, Font.code, 9, txtS);
-
-// Клавиша D (справа по центру)
-color colD = Key.d ? activeBg : bg;
-color txtD = Key.d ? activeText : textCol;
-Render.drawRoundedRect(48, 24, 20, 20, r, colD);
-Render.drawRoundedOutline(48, 24, 20, 20, r, 1.0, borderCol);
-Render.drawText("D", 55, 30, Font.code, 9, txtD);
-
-// Кнопка LMB (слева снизу)
-color colLmb = Key.lmb ? activeBg : bg;
-color txtLmb = Key.lmb ? activeText : textCol;
-Render.drawRoundedRect(0, 48, 32, 20, r, colLmb);
-Render.drawRoundedOutline(0, 48, 32, 20, r, 1.0, borderCol);
-Render.drawText("LMB", 6, 51, Font.code, 8, txtLmb);
-Render.drawText(Variables.cps + "", 10, 59, Font.code, 7, txtLmb);
-
-// Кнопка RMB (справа снизу)
-color colRmb = Key.rmb ? activeBg : bg;
-color txtRmb = Key.rmb ? activeText : textCol;
-Render.drawRoundedRect(36, 48, 32, 20, r, colRmb);
-Render.drawRoundedOutline(36, 48, 32, 20, r, 1.0, borderCol);
-Render.drawText("RMB", 42, 51, Font.code, 8, txtRmb);
-Render.drawText(Variables.rmbCps + "", 46, 59, Font.code, 7, txtRmb);
+    let r3y = r2y + kh + gap;
+    let btnW = (kw * 3 + gap * 2 - gap) / 2;
+    drawKey("LMB", x0, r3y, btnW, kh, Key.lmb, Variables.cps + " CPS");
+    drawKey("RMB", x0 + btnW + gap, r3y, btnW, kh, Key.rmb, Variables.rmbCps + " CPS");
+}
 ```
 
-### 5.2. TargetHUD (Индикатор цели с головой, здоровьем и предметом)
+---
 
-Отображается только тогда, когда игрок смотрит на цель (или удерживает её в пределах 6 блоков):
-
+### 5.2. Rectangular TargetHUD
 ```javascript
 Params.width = 150;
 Params.height = 42;
 Params.font = Font.bahnschrift;
 
-if (!Variables.hasTarget) {
-    return;
-}
+fn main() {
+    if (!Variables.hasTarget) {
+        return;
+    }
 
-color bg = #121214D0;
-color border = #2A2A32FF;
-color healthBg = #2A2A2EAA;
-color healthCol = #EF4444FF;
-num r = 5;
+    let bg = 0xD0121214;
+    let border = 0xFF2A2A32;
+    let healthBg = 0xAA2A2A2E;
+    let healthCol = 0xFFEF4444;
 
-// Фон и обводка карточки
-Render.drawRoundedRect(0, 0, Params.width, Params.height, r, bg);
-Render.drawRoundedOutline(0, 0, Params.width, Params.height, r, 1.0, border);
+    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 5, bg);
+    Render.drawRoundedOutline(Params.x, Params.y, Params.width, Params.height, 5, 1.0, border);
 
-// Голова игрока через текстуру из Target.getHeadTexture()
-string headTex = Target.getHeadTexture();
-Render.drawImage(headTex, 6, 6, 30, 30);
-Render.drawRoundedOutline(6, 6, 30, 30, 2, 1.0, #404040FF);
+    // Head with rounded corners
+    let head = Target.getHeadTexture();
+    Render.drawImage(head, Params.x + 6, Params.y + 6, 30, 30, 4);
+    Render.drawRoundedOutline(Params.x + 6, Params.y + 6, 30, 30, 4, 1.0, 0xFF404040);
 
-// Имя цели
-string targetName = Target.getName();
-Render.drawText(targetName, 42, 6, Font.bahnschrift, 9, #FFFFFF);
+    // Target Name
+    let name = Target.getName();
+    Render.drawText(name, Params.x + 42, Params.y + 6, Font.bahnschrift, 9, 0xFFFFFFFF);
 
-// Полоска здоровья
-num hp = Target.getHealth();
-num maxHp = Target.getMaxHealth();
-if (maxHp <= 0) { maxHp = 20; }
-num barW = 75;
-num filledW = (hp / maxHp) * barW;
-if (filledW > barW) { filledW = barW; }
-if (filledW < 0) { filledW = 0; }
+    // Health Bar
+    let hp = Target.getHealth();
+    let maxHp = Target.getMaxHealth();
+    if (maxHp <= 0) { maxHp = 20; }
+    let barW = 75;
+    let filledW = (hp / maxHp) * barW;
+    if (filledW > barW) { filledW = barW; }
+    if (filledW < 0) { filledW = 0; }
 
-Render.drawRoundedRect(42, 24, barW, 8, 2, healthBg);
-if (filledW > 0) {
-    Render.drawRoundedRect(42, 24, filledW, 8, 2, healthCol);
-}
-Render.drawRoundedOutline(42, 24, barW, 8, 2, 1.0, #444444FF);
+    Render.drawRoundedRect(Params.x + 42, Params.y + 24, barW, 8, 2, healthBg);
+    if (filledW > 0) {
+        Render.drawRoundedRect(Params.x + 42, Params.y + 24, filledW, 8, 2, healthCol);
+    }
+    Render.drawRoundedOutline(Params.x + 42, Params.y + 24, barW, 8, 2, 1.0, 0xFF444444);
+    Render.drawText(hp + " HP", Params.x + 42 + barW + 5, Params.y + 24, Font.bahnschrift, 8, 0xFFFF8888);
 
-// Текст здоровья
-Render.drawText(hp + " HP", 42 + barW + 5, 24, Font.bahnschrift, 8, #FF8888);
-
-// Предмет в правой руке цели через Target.getRightHandItemTexture()
-string itemRight = Target.getRightHandItemTexture();
-if (itemRight != "") {
-    Render.drawImage(itemRight, 128, 5, 16, 16);
+    // Main Hand Item
+    let itemRight = Target.getRightHandItemTexture();
+    if (itemRight != "") {
+        Render.drawImage(itemRight, Params.x + 128, Params.y + 5, 16, 16);
+    }
 }
 ```
 
 ---
 
-# Часть 2. Спецификация для ИИ-агентов (AI Agent Specification)
+### 5.3. Circular TargetHUD (Head in center, health ring around it)
+```javascript
+Params.width = 64;
+Params.height = 64;
 
-## 1. Архитектура парсера и рантайма
+fn main() {
+    if (!Variables.hasTarget) {
+        return;
+    }
 
-Скриптовый движок расположен в пакете `org.tovasha.ych.script`:
-- `ScriptLexer.java`: преобразует текст `.svhe` в поток токенов `Token`. Поддерживает ключевые слова, строковые литералы с экранированием, hex-цвета `#RRGGBB` и `#RRGGBBAA`, операторы и идентификаторы.
-- `ScriptParser.java`: recursive-descent LL(k) парсер, строит AST-дерево узлов `AstNode` (Statements и Expressions).
-- `AstEvaluator.java`: рекурсивный интерпретатор с таблицей символов `Environment`.
-- `BuiltinRegistry.java`: связывает глобальные имена (`Render`, `Variables`, `Key`, `Params`, `Math`, `Font`) с соответствующими объектами `ScriptNamespace`.
+    let cx = Params.x + Params.width / 2;
+    let cy = Params.y + Params.height / 2;
 
-Каждый кадр рендера (`RenderGuiEvent`):
-1. Матрица GUI смещается к `(Params.x, Params.y)`.
-2. AST скрипта исполняется вызовом `evaluator.evaluate(programAst, elementEnvironment)`.
-3. Все вызовы `Render.*` преобразуются в вызовы `RenderUtils` и немедленно отрисовываются через `DrawContext` / `GuiGraphics`.
-4. Смещение матрицы возвращается назад.
+    let outerR = 28;     // Ring radius
+    let ringThick = 3.5; // Ring thickness
+    let headSize = 36;   // Head size
 
-## 2. Формальная грамматика EBNF
+    let bgColor = 0xD5121216;
+    let ringBgColor = 0x442A2A34;
+    let hpColor = 0xFFEF4444;
 
-```ebnf
-Program         ::= Statement*
+    // 1. Smooth background circle
+    Render.drawCircle(cx, cy, outerR, bgColor);
 
-Statement       ::= VarDeclStmt
-                  | AssignStmt
-                  | ExprStmt
-                  | BlockStmt
-                  | IfStmt
-                  | WhileStmt
-                  | ForStmt
-                  | SwitchStmt
-                  | BreakStmt
-                  | ContinueStmt
+    // 2. Empty health track ring
+    Render.drawRing(cx, cy, outerR, ringThick, ringBgColor);
 
-VarDeclStmt     ::= TypeName IDENTIFIER ('=' Expression)? ';'
-TypeName        ::= 'num' | 'string' | 'bool' | 'color' | 'locate'
+    // 3. Dynamic health progress arc
+    let hp = Target.getHealth();
+    let maxHp = Target.getMaxHealth();
+    if (maxHp <= 0) { maxHp = 20; }
+    let progress = hp / maxHp;
+    if (progress > 1.0) { progress = 1.0; }
+    if (progress < 0.0) { progress = 0.0; }
 
-AssignStmt      ::= QualifiedName ('=' | '+=' | '-=' | '*=' | '/=') Expression ';'
-                  | QualifiedName ('++' | '--') ';'
+    if (progress > 0) {
+        Render.drawArc(cx, cy, outerR, ringThick, -90, -90 + progress * 360, hpColor);
+    }
 
-IfStmt          ::= 'if' '(' Expression ')' Statement ('else' Statement)?
-
-WhileStmt       ::= 'while' '(' Expression ')' Statement
-
-ForStmt         ::= 'for' '(' (VarDeclStmt | AssignStmt)? Expression? ';' (AssignStmt | Expression)? ')' Statement
-
-SwitchStmt      ::= 'switch' '(' Expression ')' '{' SwitchCase* '}'
-SwitchCase      ::= ('case' Expression ':' | 'default' ':') Statement*
-
-BlockStmt       ::= '{' Statement* '}'
-
-ExprStmt        ::= Expression ';'
-
-Expression      ::= LogicalOr
-LogicalOr       ::= LogicalAnd ('||' LogicalAnd)*
-LogicalAnd      ::= Equality ('&&' Equality)*
-Equality        ::= Relational (('==' | '!=') Relational)*
-Relational      ::= Additive (('<' | '<=' | '>' | '>=') Additive)*
-Additive        ::= Multiplicative (('+' | '-') Multiplicative)*
-Multiplicative  ::= Unary (('*' | '/' | '%') Unary)*
-Unary           ::= ('!' | '-' | '+') Unary | Primary
-Primary         ::= Literal
-                  | QualifiedName
-                  | FunctionCall
-                  | TernaryExpr
-                  | '(' Expression ')'
-
-TernaryExpr     ::= Expression '?' Expression ':' Expression
-FunctionCall    ::= QualifiedName '(' (Expression (',' Expression)*)? ')'
-QualifiedName   ::= IDENTIFIER ('.' IDENTIFIER)*
-Literal         ::= NUMBER | STRING | HEX_COLOR | BOOLEAN | 'null'
+    // 4. Head clipped to a smooth circle (radius = headSize / 2)
+    let head = Target.getHeadTexture();
+    Render.drawImage(head, cx - headSize / 2, cy - headSize / 2, headSize, headSize, headSize / 2);
+}
 ```
 
-## 3. Система типов и правила приведения
+---
 
-1. **Числа (`num`)**: все числовые значения внутри представляются как `java.lang.Double`. При передаче в функции OpenGL они автоматически преобразуются в `float` или `int`.
-2. **Строки (`string`)**: строки Java `java.lang.String`. Оператор `+` производит конкатенацию, если хотя бы один из операндов строка:
-   - `Variables.cps + ""` преобразует число `0.0` или `5.0` в строку `"0"` или `"5"`.
-3. **Логические (`bool`)**: `java.lang.Boolean`. Число `0.0` и `null` считаются `false`, ненулевые числа и непустые строки — `true`.
-4. **Цвета (`color`)**: упакованное целое число `0xAARRGGBB` (ARGB).
-   - `#FFFFFF` -> `0xFFFFFFFF`
-   - `#55FF5580` -> `0x8055FF55` (полупрозрачный зеленый)
-   - `Render.color(r, g, b, a)` возвращает `0xAARRGGBB`.
-5. **Пути к файлам (`locate`)**: строковый объект, хранящий путь на диске к изображению. Кэшируется в `TextureManager` и загружается в память видеокарты как `DynamicTexture`.
+# Part 2. AI Agent Specification
 
-## 4. Правила генерации скриптов для ИИ
+## 1. Engine & Runtime Architecture
+The scripting engine resides in package `org.tovasha.ych.script`:
+- `Lexer.java`: Converts `.svhe` text to tokens. Supports identifiers, keywords, numbers, string literals, and hex colors (`#RRGGBB`, `#RRGGBBAA`).
+- `Parser.java`: Recursive-descent LL(k) parser, producing an AST of `ProgramNode`, `StatementNode`, and `ExpressionNode`.
+- `Interpreter.java`: Tree-walking runtime interpreter with lexical `Environment`.
+- `HudElement.java`: Bridges Minecraft render ticks to the script. Calls `interpreter.callFunction("main")` or executes top-level statements per frame. Handles `ReturnException` cleanly.
 
-При формировании скриптов для пользователя:
-1. **Координаты**: всегда используйте относительные координаты от `(0, 0)` до `(Params.width, Params.height)`. Сам мод уже смещает позицию на `Params.x` и `Params.y`.
-2. **Нажатия клавиш**: используйте пространство имен `Key` (`Key.w`, `Key.lmb`, `Key.rmb`, `Key.space`), а не `Variables`.
-3. **Пространство имен `Render`**:
-   - Для текста: `Render.drawText(text, x, y, font, size, color)` или `Render.drawText(text, x, y, color)`.
-   - Для обводок: `Render.drawOutline(x, y, w, h, thickness, color)` или `Render.drawRoundedOutline(x, y, w, h, radius, thickness, color)`.
-4. **Безопасность типов**: при выводе чисел в `drawText` всегда приводите их к строке через `+ ""` (например, `Variables.fps + ""`).
-5. **Размеры контейнера**: задавайте `Params.width` и `Params.height` в начале скрипта, чтобы элемент корректно выделялся и перемещался в GUI инспектора.
+## 2. Rendering Pipeline
+Rendering occurs in `org.tovasha.ych.render`:
+- `RenderUtils.java`: Coordinates high-level render requests.
+- `RoundedRectRenderState.java`: Implements `GuiElementRenderState` for drawing anti-aliased rounded rectangles, borders, and gradients.
+- `ArcRenderState.java`: Implements `GuiElementRenderState` for circular rings and arcs (`RenderPipelines.GUI`).
+- `RoundedTextureRenderState.java`: Implements `GuiElementRenderState` using `RenderPipelines.GUI_TEXTURED`, enabling texture and skin head clipping with corner radiuses or circular masks.
+- `TargetTracker.java`: Raycasts crosshair targets up to 6 blocks and computes 3D-to-2D screen projections using Minecraft's camera matrix and FOV.
+
+## 3. Strict Coding Constraints
+When contributing to this mod's Java source code:
+- **Rule 1 (Zero FQNs)**: No Fully Qualified Class Names in Java code. All classes must be imported at the top of the file.
+- **Rule 2 (Zero Comments)**: No comments (`//`, `/*`, JavaDoc) in Java source files.

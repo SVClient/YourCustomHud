@@ -1,3 +1,3 @@
-# YourCustomHud (SVClient)
+# YourCustomHud
 
-Полная документация по моду YourCustomHud доступна в файле [DOCUMENTATION.md](DOCUMENTATION.md).
+Complete documentation for the **YourCustomHud** mod is available in [DOCUMENTATION.md](DOCUMENTATION.md).

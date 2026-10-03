@@ -54,6 +54,15 @@ public class RoundedRectRenderState implements GuiElementRenderState {
         return RenderPipelines.GUI;
     }
 
+    static {
+        for (java.lang.reflect.Method m : TextureSetup.class.getMethods()) {
+            System.out.println("TS_M: " + m.getName() + " " + java.util.Arrays.toString(m.getParameterTypes()));
+        }
+        for (java.lang.reflect.Field f : RenderPipelines.class.getFields()) {
+            if (f.getName().contains("GUI")) System.out.println("RP_F: " + f.getName());
+        }
+    }
+
     @Override
     public TextureSetup textureSetup() {
         return TextureSetup.noTexture();
