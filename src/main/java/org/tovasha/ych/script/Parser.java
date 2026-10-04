@@ -3,15 +3,18 @@ package org.tovasha.ych.script;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import org.tovasha.ych.script.ast.ArrayLiteralNode;
 import org.tovasha.ych.script.ast.AssignNode;
 import org.tovasha.ych.script.ast.BinaryNode;
 import org.tovasha.ych.script.ast.BlockNode;
+import org.tovasha.ych.script.ast.BreakNode;
 import org.tovasha.ych.script.ast.CallNode;
+import org.tovasha.ych.script.ast.ContinueNode;
 import org.tovasha.ych.script.ast.ExpressionNode;
 import org.tovasha.ych.script.ast.ExpressionStatementNode;
-import org.tovasha.ych.script.ast.BreakNode;
-import org.tovasha.ych.script.ast.ContinueNode;
 import org.tovasha.ych.script.ast.ForNode;
+import org.tovasha.ych.script.ast.ForeachNode;
+import org.tovasha.ych.script.ast.IndexAccessNode;
 import org.tovasha.ych.script.ast.FunctionDeclNode;
 import org.tovasha.ych.script.ast.IdentifierNode;
 import org.tovasha.ych.script.ast.IfNode;
@@ -83,8 +86,13 @@ public class Parser {
         List<String> parameters = new ArrayList<>();
         if (!check(TokenType.RPAREN)) {
             do {
-                Token param = consume(TokenType.IDENTIFIER, "Expect parameter name");
-                parameters.add(param.getLexeme());
+                Token token = consume(TokenType.IDENTIFIER, "Expect parameter name");
+                if (check(TokenType.IDENTIFIER)) {
+                    Token nameTokenParam = advance();
+                    parameters.add(nameTokenParam.getLexeme());
+                } else {
+                    parameters.add(token.getLexeme());
+                }
             } while (match(TokenType.COMMA));
         }
         consume(TokenType.RPAREN, "Expect ')' after parameters");
@@ -102,6 +110,9 @@ public class Parser {
         }
         if (match(TokenType.FOR)) {
             return forStatement();
+        }
+        if (match(TokenType.FOREACH)) {
+            return foreachStatement();
         }
         if (match(TokenType.SWITCH)) {
             return switchStatement();
@@ -136,9 +147,59 @@ public class Parser {
         return new WhileNode(condition, body, prev.getLine(), prev.getColumn());
     }
 
+    private StatementNode foreachStatement() {
+        Token prev = previous();
+        boolean hasParen = match(TokenType.LPAREN);
+        match(TokenType.LET, TokenType.LOCATE);
+        Token varToken = consume(TokenType.IDENTIFIER, "Expect variable name in foreach loop");
+        if (!match(TokenType.COLON) && !match(TokenType.IN)) {
+            if (check(TokenType.IDENTIFIER) && "in".equalsIgnoreCase(peek().getLexeme())) {
+                advance();
+            } else {
+                error(peek(), "Expect ':' or 'in' in foreach loop");
+                throw new ParseException();
+            }
+        }
+        ExpressionNode iterable = expression();
+        if (hasParen) {
+            consume(TokenType.RPAREN, "Expect ')' after foreach clauses");
+        }
+        StatementNode body = statement();
+        return new ForeachNode(varToken.getLexeme(), iterable, body, prev.getLine(), prev.getColumn());
+    }
+
     private StatementNode forStatement() {
         Token prev = previous();
         boolean hasParen = match(TokenType.LPAREN);
+        boolean isForeach = false;
+        if (check(TokenType.LET) || check(TokenType.LOCATE)) {
+            if (current + 2 < tokens.size() && tokens.get(current + 1).getType() == TokenType.IDENTIFIER) {
+                TokenType t = tokens.get(current + 2).getType();
+                if (t == TokenType.COLON || t == TokenType.IN || (t == TokenType.IDENTIFIER && "in".equalsIgnoreCase(tokens.get(current + 2).getLexeme()))) {
+                    isForeach = true;
+                }
+            }
+        } else if (check(TokenType.IDENTIFIER)) {
+            if (current + 1 < tokens.size()) {
+                TokenType t = tokens.get(current + 1).getType();
+                if (t == TokenType.COLON || t == TokenType.IN || (t == TokenType.IDENTIFIER && "in".equalsIgnoreCase(tokens.get(current + 1).getLexeme()))) {
+                    isForeach = true;
+                }
+            }
+        }
+        if (isForeach) {
+            match(TokenType.LET, TokenType.LOCATE);
+            Token varToken = consume(TokenType.IDENTIFIER, "Expect variable name in loop");
+            if (!match(TokenType.COLON) && !match(TokenType.IN)) {
+                advance();
+            }
+            ExpressionNode iterable = expression();
+            if (hasParen) {
+                consume(TokenType.RPAREN, "Expect ')' after loop clauses");
+            }
+            StatementNode body = statement();
+            return new ForeachNode(varToken.getLexeme(), iterable, body, prev.getLine(), prev.getColumn());
+        }
         StatementNode initializer = null;
         if (match(TokenType.SEMICOLON)) {
             initializer = null;
@@ -263,7 +324,7 @@ public class Parser {
         if (match(TokenType.EQUAL)) {
             Token equals = previous();
             ExpressionNode value = assignment();
-            if (expr instanceof IdentifierNode || expr instanceof MemberAccessNode) {
+            if (expr instanceof IdentifierNode || expr instanceof MemberAccessNode || expr instanceof IndexAccessNode) {
                 return new AssignNode(expr, value, equals.getLine(), equals.getColumn());
             }
             error(equals, "Invalid assignment target");
@@ -277,7 +338,7 @@ public class Parser {
                 default: binOp = TokenType.SLASH; break;
             }
             ExpressionNode value = assignment();
-            if (expr instanceof IdentifierNode || expr instanceof MemberAccessNode) {
+            if (expr instanceof IdentifierNode || expr instanceof MemberAccessNode || expr instanceof IndexAccessNode) {
                 ExpressionNode bin = new BinaryNode(expr, binOp, value, op.getLine(), op.getColumn());
                 return new AssignNode(expr, bin, op.getLine(), op.getColumn());
             }
@@ -363,6 +424,11 @@ public class Parser {
             } else if (match(TokenType.DOT)) {
                 Token name = consume(TokenType.IDENTIFIER, "Expect property name after '.'");
                 expr = new MemberAccessNode(expr, name.getLexeme(), name.getLine(), name.getColumn());
+            } else if (match(TokenType.LBRACKET)) {
+                Token bracket = previous();
+                ExpressionNode index = expression();
+                consume(TokenType.RBRACKET, "Expect ']' after index");
+                expr = new IndexAccessNode(expr, index, bracket.getLine(), bracket.getColumn());
             } else {
                 break;
             }
@@ -397,6 +463,18 @@ public class Parser {
         }
         if (match(TokenType.IDENTIFIER)) {
             return new IdentifierNode(previous().getLexeme(), previous().getLine(), previous().getColumn());
+        }
+        if (match(TokenType.LBRACKET)) {
+            Token bracket = previous();
+            List<ExpressionNode> elements = new ArrayList<>();
+            if (!check(TokenType.RBRACKET)) {
+                do {
+                    if (check(TokenType.RBRACKET)) break;
+                    elements.add(expression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RBRACKET, "Expect ']' after array elements");
+            return new ArrayLiteralNode(elements, bracket.getLine(), bracket.getColumn());
         }
         if (match(TokenType.LPAREN)) {
             ExpressionNode expr = expression();

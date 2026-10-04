@@ -12,6 +12,8 @@ public enum TokenType {
     NULL,
 
     FOR,
+    FOREACH,
+    IN,
     WHILE,
     BREAK,
     CONTINUE,

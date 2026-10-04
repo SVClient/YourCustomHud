@@ -9,8 +9,7 @@ import me.shedaniel.autoconfig.annotation.Config;
 @Getter
 @Setter
 public class MainConfig implements ConfigData {
-    public boolean enabled = true;
-    public boolean renderAboveAll = false;
-    public boolean lightTheme = false;
-    public String activePreset = "default";
+    private boolean enabled = true;
+    private boolean renderAboveAll = false;
+    private String activePreset = "default";
 }

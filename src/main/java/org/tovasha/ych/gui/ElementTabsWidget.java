@@ -24,6 +24,9 @@ public class ElementTabsWidget {
     private int height;
 
     private HudElement selectedElement;
+    private HudElement draggingElement;
+    private double dragStartX;
+    private boolean isDraggingTab = false;
     private int scrollOffset = 0;
     private String nameInput = "";
     private boolean inputFocused = false;
@@ -73,12 +76,16 @@ public class ElementTabsWidget {
 
         for (HudElement el : elements) {
             boolean isActive = el == selectedElement;
+            boolean isDraggingThis = isDraggingTab && el == draggingElement;
             int textW = RenderUtils.getTextWidth(el.getName());
             int tabW = textW + 24;
 
             if (itemX + tabW >= curX && itemX <= tabsEndX) {
                 boolean hover = mouseX >= itemX && mouseX <= itemX + tabW && mouseY >= y + 3 && mouseY <= y + height - 3;
-                if (isActive) {
+                if (isDraggingThis) {
+                    RenderUtils.drawRoundedRect(graphics, itemX, y + 4, tabW, height - 8, 4, 0xFF4338CA);
+                    RenderUtils.drawRoundedOutline(graphics, itemX, y + 4, tabW, height - 8, 4, 1.5f, 0xFF6366F1);
+                } else if (isActive) {
                     RenderUtils.drawRoundedRect(graphics, itemX, y + 4, tabW, height - 8, 4, Theme.getAccent());
                 } else if (hover) {
                     RenderUtils.drawRoundedRect(graphics, itemX, y + 4, tabW, height - 8, 4, 0xFF2A2A2E);
@@ -89,7 +96,7 @@ public class ElementTabsWidget {
                 int dotColor = el.isEnabled() ? 0xFF22C55E : 0xFFEF4444;
                 RenderUtils.drawRoundedRect(graphics, itemX + 6, centerY - 2, 5, 5, 2, dotColor);
 
-                int textColor = isActive ? 0xFFFFFFFF : (hover ? Theme.getTextPrimary() : Theme.getTextSecondary());
+                int textColor = isActive || isDraggingThis ? 0xFFFFFFFF : (hover ? Theme.getTextPrimary() : Theme.getTextSecondary());
                 RenderUtils.drawText(graphics, el.getName(), itemX + 15, y + (height - 9) / 2, textColor);
             }
             itemX += tabW + 5;
@@ -176,6 +183,9 @@ public class ElementTabsWidget {
                         }
                     } else {
                         selectedElement = el;
+                        draggingElement = el;
+                        dragStartX = mx;
+                        isDraggingTab = false;
                         nameInput = el.getName();
                         if (onElementChanged != null) {
                             onElementChanged.accept(el);
@@ -254,6 +264,48 @@ public class ElementTabsWidget {
             return true;
         }
 
+        return false;
+    }
+
+    public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (draggingElement != null) {
+            double mx = event.x();
+            if (Math.abs(mx - dragStartX) > 4) {
+                isDraggingTab = true;
+            }
+            if (isDraggingTab) {
+                List<HudElement> elements = HudRegistry.getElements();
+                int currentIndex = elements.indexOf(draggingElement);
+                if (currentIndex >= 0) {
+                    int curX = x + 24;
+                    int itemX = curX - scrollOffset;
+                    for (int i = 0; i < elements.size(); i++) {
+                        HudElement el = elements.get(i);
+                        int textW = RenderUtils.getTextWidth(el.getName());
+                        int tabW = textW + 24;
+                        if (el != draggingElement && mx >= itemX && mx <= itemX + tabW) {
+                            HudRegistry.moveElement(currentIndex, i);
+                            break;
+                        }
+                        itemX += tabW + 5;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean mouseReleased(MouseButtonEvent event) {
+        if (draggingElement != null) {
+            boolean wasDragging = isDraggingTab;
+            draggingElement = null;
+            isDraggingTab = false;
+            if (wasDragging && onPresetModified != null) {
+                onPresetModified.run();
+            }
+            return wasDragging;
+        }
         return false;
     }
 

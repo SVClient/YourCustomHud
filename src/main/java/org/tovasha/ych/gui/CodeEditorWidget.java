@@ -318,6 +318,8 @@ public class CodeEditorWidget {
                     case "Math":
                     case "Font":
                     case "Render":
+                    case "Slot":
+                    case "slot":
                         color = 0xFF8BE9FD;
                         break;
                 }

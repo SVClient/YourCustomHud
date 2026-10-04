@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.client.gui.GuiGraphics;
+import org.tovasha.ych.script.builtins.BuiltinTarget;
 
 public class HudRegistry {
     private static final Map<String, HudElement> ELEMENTS = new ConcurrentHashMap<>();
@@ -35,6 +36,14 @@ public class HudRegistry {
         return Collections.unmodifiableList(ORDERED_ELEMENTS);
     }
 
+    public static void moveElement(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || fromIndex >= ORDERED_ELEMENTS.size() || toIndex < 0 || toIndex >= ORDERED_ELEMENTS.size() || fromIndex == toIndex) {
+            return;
+        }
+        HudElement el = ORDERED_ELEMENTS.remove(fromIndex);
+        ORDERED_ELEMENTS.add(toIndex, el);
+    }
+
     public static void renderAll(GuiGraphics graphics, float deltaTick) {
         for (HudElement element : ORDERED_ELEMENTS) {
             element.render(graphics, deltaTick);
@@ -50,6 +59,12 @@ public class HudRegistry {
     public static void keyPressedAll(int key, int action) {
         for (HudElement element : ORDERED_ELEMENTS) {
             element.keyPressed(key, action);
+        }
+    }
+
+    public static void attackAll(BuiltinTarget target) {
+        for (HudElement element : ORDERED_ELEMENTS) {
+            element.attack(target);
         }
     }
 

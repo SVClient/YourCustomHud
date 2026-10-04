@@ -55,6 +55,7 @@ public class HudEditorScreen extends Screen {
 
         presetBar.setOnPresetChanged(presetName -> {
             YourCustomHud.CONFIG.setActivePreset(presetName);
+            YourCustomHud.saveConfig();
             StorageManager.loadPreset(presetName);
             List<HudElement> els = HudRegistry.getElements();
             selectElement(els.isEmpty() ? null : els.get(0));
@@ -174,6 +175,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        if (elementTabs != null) {
+            elementTabs.mouseReleased(event);
+        }
         if (previewWidget != null) {
             previewWidget.mouseReleased(event);
         }
@@ -185,6 +189,9 @@ public class HudEditorScreen extends Screen {
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (elementTabs != null && elementTabs.mouseDragged(event, dragX, dragY)) {
+            return true;
+        }
         if (previewWidget != null && previewWidget.mouseDragged(event, dragX, dragY)) {
             return true;
         }
@@ -231,6 +238,7 @@ public class HudEditorScreen extends Screen {
                     presetBar.setActivePreset(presetName);
                 }
                 YourCustomHud.CONFIG.setActivePreset(presetName);
+                YourCustomHud.saveConfig();
                 StorageManager.loadPreset(presetName);
                 List<HudElement> els = HudRegistry.getElements();
                 selectElement(els.isEmpty() ? null : els.get(0));
@@ -247,6 +255,10 @@ public class HudEditorScreen extends Screen {
     @Override
     public void onClose() {
         bakePreset();
+        if (presetBar != null) {
+            YourCustomHud.CONFIG.setActivePreset(presetBar.getActivePreset());
+            YourCustomHud.saveConfig();
+        }
         if (minecraft != null) {
             minecraft.setScreen(null);
         }

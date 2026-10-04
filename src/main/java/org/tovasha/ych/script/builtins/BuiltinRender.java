@@ -240,6 +240,18 @@ public class BuiltinRender implements ScriptNamespace {
             return null;
         });
 
+        registerMethod("drawSprite", args -> {
+            if (graphics != null && args.size() >= 5) {
+                String spritePath = String.valueOf(args.get(0));
+                Identifier id = Identifier.tryParse(spritePath);
+                if (id != null) {
+                    RenderUtils.drawSprite(graphics, id, toFloat(args.get(1)), toFloat(args.get(2)),
+                            toFloat(args.get(3)), toFloat(args.get(4)));
+                }
+            }
+            return null;
+        });
+
         registerMethod("drawTexture", args -> {
             if (graphics != null && args.size() >= 3) {
                 String path = String.valueOf(args.get(0));
@@ -304,11 +316,16 @@ public class BuiltinRender implements ScriptNamespace {
 
         registerMethod("drawItem", args -> {
             if (graphics != null && args.size() >= 3) {
-                String itemName = String.valueOf(args.get(0));
+                Object itemObj = args.get(0);
                 float x = toFloat(args.get(1));
                 float y = toFloat(args.get(2));
                 float size = args.size() >= 4 ? toFloat(args.get(3)) : 16.0f;
-                ItemStack stack = getItemStackByName(itemName);
+                ItemStack stack = ItemStack.EMPTY;
+                if (itemObj instanceof Slot slot) {
+                    stack = slot.getItemStack();
+                } else if (itemObj != null) {
+                    stack = getItemStackByName(String.valueOf(itemObj));
+                }
                 if (!stack.isEmpty()) {
                     RenderUtils.drawItem(graphics, stack, x, y, size);
                 }

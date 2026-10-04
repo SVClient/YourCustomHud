@@ -32,6 +32,11 @@ public class BuiltinFont implements ScriptNamespace {
                     return RenderUtils.getFontHeight(fontName, 9.0f);
                 }
             }
+            if (args.get(0) instanceof Number && !(args.get(1) instanceof Number)) {
+                float size = toFloat(args.get(0));
+                String fontName = String.valueOf(args.get(1));
+                return RenderUtils.getFontHeight(fontName, size);
+            }
             String fontName = String.valueOf(args.get(0));
             float size = toFloat(args.get(1));
             return RenderUtils.getFontHeight(fontName, size);
@@ -57,6 +62,11 @@ public class BuiltinFont implements ScriptNamespace {
                     String fontName = String.valueOf(args.get(1));
                     return RenderUtils.getTextWidth(text, fontName, 9.0f);
                 }
+            }
+            if (args.get(1) instanceof Number && !(args.get(2) instanceof Number)) {
+                float size = toFloat(args.get(1));
+                String fontName = String.valueOf(args.get(2));
+                return RenderUtils.getTextWidth(text, fontName, size);
             }
             String fontName = String.valueOf(args.get(1));
             float size = toFloat(args.get(2));

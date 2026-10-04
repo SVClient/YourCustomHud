@@ -1,10 +1,13 @@
 package org.tovasha.ych.script;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.Getter;
+import org.tovasha.ych.script.ast.ArrayLiteralNode;
 import org.tovasha.ych.script.ast.AssignNode;
 import org.tovasha.ych.script.ast.AstNode;
 import org.tovasha.ych.script.ast.BinaryNode;
@@ -15,9 +18,11 @@ import org.tovasha.ych.script.ast.ContinueNode;
 import org.tovasha.ych.script.ast.ExpressionNode;
 import org.tovasha.ych.script.ast.ExpressionStatementNode;
 import org.tovasha.ych.script.ast.ForNode;
+import org.tovasha.ych.script.ast.ForeachNode;
 import org.tovasha.ych.script.ast.FunctionDeclNode;
 import org.tovasha.ych.script.ast.IdentifierNode;
 import org.tovasha.ych.script.ast.IfNode;
+import org.tovasha.ych.script.ast.IndexAccessNode;
 import org.tovasha.ych.script.ast.LiteralNode;
 import org.tovasha.ych.script.ast.MemberAccessNode;
 import org.tovasha.ych.script.ast.ProgramNode;
@@ -122,6 +127,26 @@ public class Interpreter {
                     evaluate(forNode.getIncrement(), forEnv);
                 }
             }
+        } else if (stmt instanceof ForeachNode) {
+            ForeachNode foreachNode = (ForeachNode) stmt;
+            Object iterObj = evaluate(foreachNode.getIterable(), env);
+            Iterable<?> iterable = toIterable(iterObj);
+            if (iterable != null) {
+                int iterations = 0;
+                for (Object item : iterable) {
+                    if (++iterations > 10000) {
+                        throw new RuntimeException("Foreach loop exceeded maximum iterations (10000)");
+                    }
+                    Environment loopEnv = new Environment(env);
+                    loopEnv.define(foreachNode.getVariableName(), item);
+                    try {
+                        execute(foreachNode.getBody(), loopEnv);
+                    } catch (BreakException e) {
+                        break;
+                    } catch (ContinueException e) {
+                    }
+                }
+            }
         } else if (stmt instanceof BreakNode) {
             throw new BreakException();
         } else if (stmt instanceof ContinueNode) {
@@ -170,6 +195,20 @@ public class Interpreter {
             String name = ((IdentifierNode) expr).getName();
             return env.get(name);
         }
+        if (expr instanceof ArrayLiteralNode) {
+            ArrayLiteralNode arr = (ArrayLiteralNode) expr;
+            List<Object> list = new ArrayList<>();
+            for (ExpressionNode el : arr.getElements()) {
+                list.add(evaluate(el, env));
+            }
+            return list;
+        }
+        if (expr instanceof IndexAccessNode) {
+            IndexAccessNode indexAccess = (IndexAccessNode) expr;
+            Object target = evaluate(indexAccess.getTarget(), env);
+            Object indexObj = evaluate(indexAccess.getIndex(), env);
+            return getIndexedElement(target, indexObj);
+        }
         if (expr instanceof AssignNode) {
             AssignNode assign = (AssignNode) expr;
             Object val = evaluate(assign.getValue(), env);
@@ -184,6 +223,11 @@ public class Interpreter {
                 if (targetObj instanceof ScriptNamespace) {
                     ((ScriptNamespace) targetObj).setProperty(access.getMember(), val);
                 }
+            } else if (assign.getTarget() instanceof IndexAccessNode) {
+                IndexAccessNode indexAccess = (IndexAccessNode) assign.getTarget();
+                Object targetObj = evaluate(indexAccess.getTarget(), env);
+                Object indexObj = evaluate(indexAccess.getIndex(), env);
+                setIndexedElement(targetObj, indexObj, val);
             }
             return val;
         }
@@ -193,7 +237,7 @@ public class Interpreter {
             if (target instanceof ScriptNamespace) {
                 return ((ScriptNamespace) target).getProperty(access.getMember());
             }
-            return null;
+            return getMemberProperty(target, access.getMember());
         }
         if (expr instanceof UnaryNode) {
             UnaryNode unary = (UnaryNode) expr;
@@ -225,6 +269,11 @@ public class Interpreter {
 
             switch (binary.getOperator()) {
                 case PLUS:
+                    if (left instanceof List && right instanceof List) {
+                        List<Object> combined = new ArrayList<>((List<?>) left);
+                        combined.addAll((List<?>) right);
+                        return combined;
+                    }
                     if (left instanceof String || right instanceof String) {
                         return formatString(left) + formatString(right);
                     }
@@ -335,6 +384,313 @@ public class Interpreter {
                 return String.format("%d", (long) d);
             }
         }
+        if (o instanceof List<?> list) {
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(formatString(list.get(i)));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        if (o.getClass().isArray()) {
+            int len = Array.getLength(o);
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < len; i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(formatString(Array.get(o, i)));
+            }
+            sb.append("]");
+            return sb.toString();
+        }
         return String.valueOf(o);
+    }
+
+    private Iterable<?> toIterable(Object iterObj) {
+        if (iterObj == null) {
+            return null;
+        }
+        if (iterObj instanceof Iterable<?>) {
+            return (Iterable<?>) iterObj;
+        }
+        if (iterObj.getClass().isArray()) {
+            int len = Array.getLength(iterObj);
+            List<Object> list = new ArrayList<>(len);
+            for (int i = 0; i < len; i++) {
+                list.add(Array.get(iterObj, i));
+            }
+            return list;
+        }
+        if (iterObj instanceof Map<?, ?> map) {
+            return map.values();
+        }
+        if (iterObj instanceof String str) {
+            List<String> list = new ArrayList<>(str.length());
+            for (int i = 0; i < str.length(); i++) {
+                list.add(String.valueOf(str.charAt(i)));
+            }
+            return list;
+        }
+        return Collections.singletonList(iterObj);
+    }
+
+    private Object getIndexedElement(Object target, Object indexObj) {
+        if (target == null || indexObj == null) {
+            return null;
+        }
+        if (target instanceof List<?> list) {
+            int idx = toInteger(indexObj);
+            if (idx < 0) {
+                idx += list.size();
+            }
+            if (idx >= 0 && idx < list.size()) {
+                return list.get(idx);
+            }
+            return null;
+        }
+        if (target.getClass().isArray()) {
+            int len = Array.getLength(target);
+            int idx = toInteger(indexObj);
+            if (idx < 0) {
+                idx += len;
+            }
+            if (idx >= 0 && idx < len) {
+                return Array.get(target, idx);
+            }
+            return null;
+        }
+        if (target instanceof Map<?, ?> map) {
+            return map.get(indexObj);
+        }
+        if (target instanceof String str) {
+            int idx = toInteger(indexObj);
+            if (idx < 0) {
+                idx += str.length();
+            }
+            if (idx >= 0 && idx < str.length()) {
+                return String.valueOf(str.charAt(idx));
+            }
+            return null;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setIndexedElement(Object target, Object indexObj, Object value) {
+        if (target == null || indexObj == null) {
+            return;
+        }
+        if (target instanceof List) {
+            List<Object> list = (List<Object>) target;
+            int idx = toInteger(indexObj);
+            if (idx < 0) {
+                idx += list.size();
+            }
+            if (idx >= 0 && idx < list.size()) {
+                list.set(idx, value);
+            } else if (idx == list.size()) {
+                list.add(value);
+            }
+            return;
+        }
+        if (target.getClass().isArray()) {
+            int len = Array.getLength(target);
+            int idx = toInteger(indexObj);
+            if (idx < 0) {
+                idx += len;
+            }
+            if (idx >= 0 && idx < len) {
+                Array.set(target, idx, value);
+            }
+            return;
+        }
+        if (target instanceof Map) {
+            ((Map<Object, Object>) target).put(indexObj, value);
+        }
+    }
+
+    private int toInteger(Object o) {
+        if (o instanceof Number) {
+            return ((Number) o).intValue();
+        }
+        if (o instanceof String) {
+            try {
+                return (int) Double.parseDouble((String) o);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object getMemberProperty(Object target, String member) {
+        if (target == null || member == null) {
+            return null;
+        }
+        String lower = member.toLowerCase();
+        if (target instanceof List<?> list) {
+            switch (lower) {
+                case "length":
+                case "size":
+                    return createLengthCallable(list.size());
+                case "isempty":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 0; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            return list.isEmpty();
+                        }
+                    };
+                case "add":
+                case "push":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                ((List<Object>) list).add(arguments.get(0));
+                            }
+                            return list;
+                        }
+                    };
+                case "remove":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                Object arg = arguments.get(0);
+                                if (arg instanceof Number num) {
+                                    int i = num.intValue();
+                                    if (i >= 0 && i < list.size()) {
+                                        return ((List<Object>) list).remove(i);
+                                    }
+                                }
+                                return ((List<Object>) list).remove(arg);
+                            }
+                            return null;
+                        }
+                    };
+                case "clear":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 0; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            ((List<Object>) list).clear();
+                            return null;
+                        }
+                    };
+                case "get":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                int i = toInteger(arguments.get(0));
+                                if (i >= 0 && i < list.size()) {
+                                    return list.get(i);
+                                }
+                            }
+                            return null;
+                        }
+                    };
+                case "set":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 2; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (arguments.size() >= 2) {
+                                int i = toInteger(arguments.get(0));
+                                if (i >= 0 && i < list.size()) {
+                                    return ((List<Object>) list).set(i, arguments.get(1));
+                                }
+                            }
+                            return null;
+                        }
+                    };
+                case "contains":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                return list.contains(arguments.get(0));
+                            }
+                            return false;
+                        }
+                    };
+                case "indexof":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                return (double) list.indexOf(arguments.get(0));
+                            }
+                            return -1.0;
+                        }
+                    };
+            }
+        }
+        if (target.getClass().isArray()) {
+            int len = Array.getLength(target);
+            switch (lower) {
+                case "length":
+                case "size":
+                    return createLengthCallable(len);
+            }
+        }
+        if (target instanceof String str) {
+            switch (lower) {
+                case "length":
+                case "size":
+                    return createLengthCallable(str.length());
+                case "contains":
+                    return new ScriptCallable() {
+                        @Override
+                        public int arity() { return 1; }
+                        @Override
+                        public Object call(Interpreter interpreter, List<Object> arguments) {
+                            if (!arguments.isEmpty()) {
+                                return str.contains(String.valueOf(arguments.get(0)));
+                            }
+                            return false;
+                        }
+                    };
+            }
+        }
+        return null;
+    }
+
+    private Object createLengthCallable(int len) {
+        abstract class LengthValue extends Number implements ScriptCallable {
+            @Override
+            public int intValue() { return len; }
+            @Override
+            public long longValue() { return len; }
+            @Override
+            public float floatValue() { return len; }
+            @Override
+            public double doubleValue() { return (double) len; }
+            @Override
+            public int arity() { return 0; }
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) len;
+            }
+            @Override
+            public String toString() {
+                return String.valueOf(len);
+            }
+        }
+        return new LengthValue() {};
     }
 }

@@ -3,6 +3,7 @@ package org.tovasha.ych.gui;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.tovasha.ych.api.HudElement;
 import org.tovasha.ych.api.ParamRegistry;
+import org.tovasha.ych.api.ParamRegistry.ParamDefinition;
 import org.tovasha.ych.api.VariableRegistry;
 import org.tovasha.ych.render.RenderUtils;
 import org.tovasha.ych.script.builtins.BuiltinVariables;
@@ -84,7 +86,7 @@ public class InspectorWidget {
             items.add(new ParamItem("Params.screenWidth", String.valueOf(sw), false, 0));
             items.add(new ParamItem("Params.screenHeight", String.valueOf(sh), false, 0));
 
-            for (Map.Entry<String, ParamRegistry.ParamDefinition> e : ParamRegistry.getAll().entrySet()) {
+            for (Entry<String, ParamDefinition> e : ParamRegistry.getAll().entrySet()) {
                 items.add(new ParamItem("Params." + e.getKey(), String.valueOf(e.getValue().getDefaultValue()), false, 0));
             }
         }
@@ -127,11 +129,10 @@ public class InspectorWidget {
 
     private void renderVariables(GuiGraphics graphics, int vx, int vy, int vw, int vh, int mouseX, int mouseY) {
         List<VarItem> items = new ArrayList<>();
-        items.add(new VarItem("Variables.player", String.valueOf(builtinVariables.getProperty("player"))));
-        items.add(new VarItem("Variables.time", String.valueOf(builtinVariables.getProperty("time"))));
-        items.add(new VarItem("Variables.day", String.valueOf(builtinVariables.getProperty("day"))));
-        items.add(new VarItem("Variables.weather", String.valueOf(builtinVariables.getProperty("weather"))));
+        items.add(new VarItem("Variables.nick", String.valueOf(builtinVariables.getProperty("nick"))));
+        items.add(new VarItem("Variables.minecraft_version", String.valueOf(builtinVariables.getProperty("minecraft_version"))));
         items.add(new VarItem("Variables.fps", String.valueOf(builtinVariables.getProperty("fps"))));
+        items.add(new VarItem("Variables.tps", String.valueOf(builtinVariables.getProperty("tps"))));
         items.add(new VarItem("Variables.ping", String.valueOf(builtinVariables.getProperty("ping")) + " ms"));
         items.add(new VarItem("Variables.speed", String.valueOf(builtinVariables.getProperty("speed")) + " m/s"));
         items.add(new VarItem("Variables.horizontalSpeed", String.valueOf(builtinVariables.getProperty("horizontalSpeed")) + " m/s"));
@@ -139,13 +140,48 @@ public class InspectorWidget {
         items.add(new VarItem("Variables.posX", String.valueOf(builtinVariables.getProperty("posX"))));
         items.add(new VarItem("Variables.posY", String.valueOf(builtinVariables.getProperty("posY"))));
         items.add(new VarItem("Variables.posZ", String.valueOf(builtinVariables.getProperty("posZ"))));
+        items.add(new VarItem("Variables.x", String.valueOf(builtinVariables.getProperty("x"))));
+        items.add(new VarItem("Variables.y", String.valueOf(builtinVariables.getProperty("y"))));
+        items.add(new VarItem("Variables.z", String.valueOf(builtinVariables.getProperty("z"))));
+        items.add(new VarItem("Variables.pitch", String.valueOf(builtinVariables.getProperty("pitch"))));
+        items.add(new VarItem("Variables.yaw", String.valueOf(builtinVariables.getProperty("yaw"))));
+        items.add(new VarItem("Variables.direction", String.valueOf(builtinVariables.getProperty("direction"))));
+        items.add(new VarItem("Variables.directionShort", String.valueOf(builtinVariables.getProperty("directionShort"))));
+        items.add(new VarItem("Variables.facing", String.valueOf(builtinVariables.getProperty("facing"))));
+        items.add(new VarItem("Variables.facingShort", String.valueOf(builtinVariables.getProperty("facingShort"))));
+        items.add(new VarItem("Variables.dimension", String.valueOf(builtinVariables.getProperty("dimension"))));
+        //items.add(new VarItem("Variables.dim", String.valueOf(builtinVariables.getProperty("dim"))));
+        items.add(new VarItem("Variables.oppositeDimension", String.valueOf(builtinVariables.getProperty("oppositeDimension"))));
+        //items.add(new VarItem("Variables.oppositeDim", String.valueOf(builtinVariables.getProperty("oppositeDim"))));
+        items.add(new VarItem("Variables.oppositeX", String.valueOf(builtinVariables.getProperty("oppositeX"))));
+        items.add(new VarItem("Variables.oppositeY", String.valueOf(builtinVariables.getProperty("oppositeY"))));
+        items.add(new VarItem("Variables.oppositeZ", String.valueOf(builtinVariables.getProperty("oppositeZ"))));
+        items.add(new VarItem("Variables.netherX", String.valueOf(builtinVariables.getProperty("netherX"))));
+        items.add(new VarItem("Variables.netherY", String.valueOf(builtinVariables.getProperty("netherY"))));
+        items.add(new VarItem("Variables.netherZ", String.valueOf(builtinVariables.getProperty("netherZ"))));
+        items.add(new VarItem("Variables.overworldX", String.valueOf(builtinVariables.getProperty("overworldX"))));
+        items.add(new VarItem("Variables.overworldY", String.valueOf(builtinVariables.getProperty("overworldY"))));
+        items.add(new VarItem("Variables.overworldZ", String.valueOf(builtinVariables.getProperty("overworldZ"))));
         items.add(new VarItem("Variables.biome", String.valueOf(builtinVariables.getProperty("biome"))));
+        items.add(new VarItem("Variables.time", String.valueOf(builtinVariables.getProperty("time"))));
+        items.add(new VarItem("Variables.rawTime", String.valueOf(builtinVariables.getProperty("rawTime"))));
+        items.add(new VarItem("Variables.day", String.valueOf(builtinVariables.getProperty("day"))));
+        items.add(new VarItem("Variables.isDay", String.valueOf(builtinVariables.getProperty("isDay"))));
+        items.add(new VarItem("Variables.isNight", String.valueOf(builtinVariables.getProperty("isNight"))));
+        items.add(new VarItem("Variables.weather", String.valueOf(builtinVariables.getProperty("weather"))));
+        items.add(new VarItem("Variables.isClear", String.valueOf(builtinVariables.getProperty("isClear"))));
+        items.add(new VarItem("Variables.isRaining", String.valueOf(builtinVariables.getProperty("isRaining"))));
+        items.add(new VarItem("Variables.isThundering", String.valueOf(builtinVariables.getProperty("isThundering"))));
         items.add(new VarItem("Variables.cps", String.valueOf(builtinVariables.getProperty("cps"))));
+        items.add(new VarItem("Variables.lmbCps", String.valueOf(builtinVariables.getProperty("lmbCps"))));
+        items.add(new VarItem("Variables.rmbCps", String.valueOf(builtinVariables.getProperty("rmbCps"))));
         items.add(new VarItem("Variables.cpsRmb", String.valueOf(builtinVariables.getProperty("cpsRmb"))));
         items.add(new VarItem("Variables.hasTarget", String.valueOf(builtinVariables.getProperty("hasTarget"))));
         items.add(new VarItem("Variables.target", String.valueOf(builtinVariables.getProperty("target"))));
+        items.add(new VarItem("Variables.potions", String.valueOf(builtinVariables.getProperty("potions"))));
+        items.add(new VarItem("Variables.inventory", String.valueOf(builtinVariables.getProperty("inventory"))));
 
-        for (Map.Entry<String, Supplier<Object>> e : VariableRegistry.getAll().entrySet()) {
+        for (Entry<String, Supplier<Object>> e : VariableRegistry.getAll().entrySet()) {
             Object val = e.getValue() != null ? e.getValue().get() : "null";
             items.add(new VarItem("Variables." + e.getKey(), String.valueOf(val)));
         }

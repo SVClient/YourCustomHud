@@ -89,12 +89,23 @@ switch (Variables.weather) {
 }
 ```
 
-### 3.4. Functions and `main()`
-Code can either be written directly at the top level or wrapped inside `fn main()`:
+### 3.4. Functions and Lifecycle / Event Callbacks
+Code can either be executed directly at the top level or structured through optional callback functions:
+- **`fn main()`** *(optional)*: Main render function, called every frame to draw the HUD element.
+- **`fn tick()`** *(optional)*: Called every Minecraft client tick (20 times per second). Ideal for timer counters, state updates, and animation logic.
+- **`fn keyPressed(key, action)`** *(optional)*: Called when keyboard input events occur (`action`: 1 = press, 0 = release, 2 = repeat).
+- **`fn attack(Target target)`** / **`fn attack(target)`** *(optional)*: Called whenever the player attacks an entity. Receives a `Target` instance representing the attacked entity, allowing immediate reaction to combat events (e.g., hit animations, combat logging, combo counters).
+
 ```javascript
 fn main() {
     Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 6, 0xAA000000);
     Render.drawText("Hello World", Params.x + 8, Params.y + 8, 0xFFFFFFFF);
+}
+
+fn attack(Target target) {
+    // Called when attacking an entity
+    let attackedName = target.getName();
+    let remainingHp = target.getHealth();
 }
 ```
 
@@ -113,16 +124,26 @@ Returns `true` when the corresponding physical key or mouse button is held down:
 ---
 
 ### 4.2. `Variables` — Player & World Statistics
+- `Variables.minecraft_version` (`string`) — Current Minecraft version (e.g. `"1.21.11"`).
 - `Variables.fps` (`num`) — Current client frame rate.
+- `Variables.tps` (`num`) — Server / local tick rate (ticks per second, measured up to 20.0).
 - `Variables.ping` (`num`) — Latency to server in milliseconds.
 - `Variables.cps` / `Variables.lmbCps` (`num`) — Left-click CPS (1000ms rolling window).
 - `Variables.rmbCps` (`num`) — Right-click CPS.
 - `Variables.speed` (`num`) — Total player speed (blocks/sec).
 - `Variables.horizontalSpeed` (`num`) — Horizontal velocity (blocks/sec).
 - `Variables.verticalSpeed` (`num`) — Vertical velocity.
-- `Variables.posX`, `Variables.posY`, `Variables.posZ` (`num`) — Player world coordinates.
+- `Variables.posX`, `Variables.posY`, `Variables.posZ` / `Variables.x`, `Variables.y`, `Variables.z` (`num`) — Player world coordinates (rounded to integers).
+- `Variables.pitch` (`num`) — Player vertical viewing angle in degrees.
+- `Variables.yaw` (`num`) — Player horizontal viewing angle wrapped to -180..180 degrees.
+- `Variables.direction` / `Variables.facing` (`string`) — Cardinal direction player is facing ("Север", "Юг", "Запад", "Восток" / "North", "South", "West", "East").
+- `Variables.directionShort` / `Variables.facingShort` (`string`) — Abbreviated cardinal direction ("С", "Ю", "З", "В" / "N", "S", "W", "E").
+- `Variables.dimension` / `Variables.dim` (`string`) — Current dimension name ("Верхний мир", "Нижний мир", "Край" / "Overworld", "Nether", "The End").
+- `Variables.oppositeX`, `Variables.oppositeY`, `Variables.oppositeZ` (`num`) — Player coordinates projected into the opposite dimension (Overworld <-> Nether ratio 8:1, rounded to integers).
+- `Variables.oppositeDimension` / `Variables.oppositeDim` (`string`) — Name of opposite dimension ("Нижний мир" / "Nether" or "Верхний мир" / "Overworld").
 - `Variables.biome` (`string`) — Current biome identifier.
-- `Variables.player` / `Variables.nick` (`string`) — Local player username.
+- `Variables.nick` (`string`) — Local player username.
+- `Variables.inventory` (`List<Slot>`) — Complete list of all player slots (hotbar, inventory, armor, offhand).
 - `Variables.time` (`string`) — Time of day string ("Morning", "Day", "Sunset", "Night").
 - `Variables.isDay` / `Variables.isNight` (`bool`) — Day/night flags.
 - `Variables.day` (`num`) — In-game days elapsed.
@@ -152,7 +173,52 @@ All properties can be called as functions `Target.getName()` or properties `Targ
 
 ---
 
-### 4.4. `Params` — HUD Element Attributes
+### 4.4. `Slot` — Inventory & Equipment Slots
+Every element inside `Variables.inventory` is a `Slot` object representing a single player slot (hotbar, storage, armor, and offhand).
+
+All slot properties can be called as methods `slot.getName()` or accessed directly as properties `slot.name`:
+| Method / Property | Return Type | Description |
+|---|---|---|
+| `slot.getName()` / `slot.name` | `string` | Display name of the item (e.g. `"Diamond Sword"`), or `""` if empty |
+| `slot.getCount()` / `slot.count` | `num` | Stack size / quantity of items in this slot |
+| `slot.getIcon()` / `slot.icon` | `string` | Registry identifier (e.g. `"minecraft:diamond_sword"`), compatible with `Render.drawItem()` |
+| `slot.isEmpty()` / `slot.empty` | `bool` | `true` if the slot is empty |
+| `slot.getIndex()` / `slot.index` | `num` | Slot index in player inventory |
+
+#### Slot Index Mapping:
+- **`0 .. 8`**: Hotbar slots
+- **`9 .. 35`**: Main inventory storage slots
+- **`36 .. 39`**: Armor slots (`36` = Boots, `37` = Leggings, `38` = Chestplate, `39` = Helmet)
+- **`40`**: Off-hand slot
+- **`41`**: Body armor
+- **`42`**: Saddle
+
+Example iterating inventory and rendering armor / hotbar:
+```javascript
+let inv = Variables.inventory;
+
+// Draw helmet icon and chestplate icon from armor slots:
+let helmet = inv[39];
+if (!helmet.isEmpty()) {
+    Render.drawItem(helmet.getIcon(), Params.x, Params.y);
+    Render.drawText(helmet.getName(), Params.x + 18, Params.y + 4, #FFFFFF);
+}
+
+// Draw hotbar items:
+for (num i = 0; i < 9; i++) {
+    let s = inv[i];
+    if (!s.isEmpty()) {
+        Render.drawItem(s.getIcon(), Params.x + i * 20, Params.y + 24);
+        if (s.getCount() > 1) {
+            Render.drawText("" + s.getCount(), Params.x + i * 20 + 10, Params.y + 34, #FFFF55);
+        }
+    }
+}
+```
+
+---
+
+### 4.5. `Params` — HUD Element Attributes
 - `Params.x`, `Params.y` (`num`) — Top-left screen position of the element.
 - `Params.width`, `Params.height` (`num`) — Element dimensions in scaled GUI pixels.
 - `Params.font` (`string`) — Default font identifier.
@@ -161,7 +227,7 @@ All properties can be called as functions `Target.getName()` or properties `Targ
 
 ---
 
-### 4.5. `Render` — Drawing Methods
+### 4.6. `Render` — Drawing Methods
 
 #### Shapes & Outlines:
 - `Render.drawRect(x, y, w, h, color)` — Filled flat rectangle.
@@ -192,7 +258,7 @@ All properties can be called as functions `Target.getName()` or properties `Targ
 
 ---
 
-### 4.6. `Font` — Typography Constants
+### 4.7. `Font` — Typography Constants
 Available vector fonts:
 - `Font.bahnschrift` (`"bahnschrift"`) — Clean geometric DIN font.
 - `Font.modern` (`"modern"`) — Sleek Segoe UI interface font.
@@ -206,7 +272,7 @@ Available vector fonts:
 
 ---
 
-### 4.7. `Math` — Mathematical Functions
+### 4.8. `Math` — Mathematical Functions
 - `Math.PI`, `Math.E`
 - `Math.sin(rad)`, `Math.cos(rad)`
 - `Math.min(a, b)`, `Math.max(a, b)`, `Math.clamp(val, min, max)`
@@ -353,6 +419,50 @@ fn main() {
     // 4. Head clipped to a smooth circle (radius = headSize / 2)
     let head = Target.getHeadTexture();
     Render.drawImage(head, cx - headSize / 2, cy - headSize / 2, headSize, headSize, headSize / 2);
+}
+```
+
+---
+
+### 5.4. Combat Hit Indicator & Armor HUD
+Demonstrates using the optional `fn attack(Target target)` callback with `Variables.minecraft_version` and `Variables.inventory`:
+```javascript
+Params.width = 160;
+Params.height = 48;
+Params.font = Font.bahnschrift;
+
+let lastHitName = "None";
+let lastHitTime = 0;
+
+fn attack(Target target) {
+    lastHitName = target.getName();
+    lastHitTime = 40;
+}
+
+fn tick() {
+    if (lastHitTime > 0) {
+        lastHitTime--;
+    }
+}
+
+fn main() {
+    Render.drawRoundedRect(Params.x, Params.y, Params.width, Params.height, 4, 0xCC111115);
+    Render.drawRoundedOutline(Params.x, Params.y, Params.width, Params.height, 4, 1.0, 0xFF33333E);
+
+    Render.drawText("MC: " + Variables.minecraft_version, Params.x + 6, Params.y + 6, 8, 0xFFAAAAAA);
+    let hitColor = lastHitTime > 0 ? 0xFFFF5555 : 0xFF888888;
+    Render.drawText("Last Hit: " + lastHitName, Params.x + 6, Params.y + 16, 8, hitColor);
+
+    let inv = Variables.inventory;
+    for (num i = 0; i < 4; i++) {
+        let slot = inv[39 - i];
+        let slotX = Params.x + 6 + i * 22;
+        let slotY = Params.y + 26;
+        Render.drawRoundedRect(slotX, slotY, 18, 18, 2, 0x4422222A);
+        if (!slot.isEmpty()) {
+            Render.drawItem(slot.getIcon(), slotX + 1, slotY + 1);
+        }
+    }
 }
 ```
 

@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -19,9 +20,16 @@ import org.tovasha.ych.script.Interpreter;
 import org.tovasha.ych.script.ScriptCallable;
 
 public class BuiltinTarget implements ScriptNamespace {
+    private final Entity entity;
     private final Map<String, ScriptCallable> methods = new HashMap<>();
 
     public BuiltinTarget() {
+        this(null);
+    }
+
+    public BuiltinTarget(Entity entity) {
+        this.entity = entity;
+
         registerMethod("getname", args -> getName());
         registerMethod("name", args -> getName());
 
@@ -52,8 +60,8 @@ public class BuiltinTarget implements ScriptNamespace {
         registerMethod("righthanditemtexture", args -> getRightHandItemTexture());
         registerMethod("mainhandtexture", args -> getRightHandItemTexture());
 
-        registerMethod("exists", args -> TargetTracker.hasTarget());
-        registerMethod("isvalid", args -> TargetTracker.hasTarget());
+        registerMethod("exists", args -> exists());
+        registerMethod("isvalid", args -> exists());
     }
 
     private void registerMethod(String name, Function<List<Object>, Object> func) {
@@ -73,6 +81,13 @@ public class BuiltinTarget implements ScriptNamespace {
                 return String.valueOf(func.apply(Collections.emptyList()));
             }
         });
+    }
+
+    private Entity getTargetEntity() {
+        if (entity != null) {
+            return entity;
+        }
+        return TargetTracker.getCurrentTarget();
     }
 
     @Override
@@ -104,20 +119,25 @@ public class BuiltinTarget implements ScriptNamespace {
             case "exists":
             case "hastarget":
             case "isvalid":
-                return TargetTracker.hasTarget();
+                return exists();
             default:
                 return null;
         }
     }
 
+    public boolean exists() {
+        Entity target = getTargetEntity();
+        return target != null && target.isAlive();
+    }
+
     public String getName() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
+        Entity target = getTargetEntity();
         if (target == null) return "";
         return target.getName().getString();
     }
 
     public String getHeadTexture() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
+        Entity target = getTargetEntity();
         if (target == null) return "";
         if (target instanceof Player player) {
             PlayerSkin skin = player instanceof AbstractClientPlayer clientPlayer
@@ -129,50 +149,62 @@ public class BuiltinTarget implements ScriptNamespace {
     }
 
     public double getScreenX() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
+        Entity target = getTargetEntity();
         if (target == null) return -9999.0;
         return TargetTracker.computeScreenPos(target)[0];
     }
 
     public double getScreenY() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
+        Entity target = getTargetEntity();
         if (target == null) return -9999.0;
         return TargetTracker.computeScreenPos(target)[1];
     }
 
     public double getHealth() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
-        if (target == null) return 0.0;
-        return Math.round(target.getHealth() * 10.0) / 10.0;
+        Entity target = getTargetEntity();
+        if (target instanceof LivingEntity living) {
+            return Math.round(living.getHealth() * 10.0) / 10.0;
+        }
+        return 0.0;
     }
 
     public double getMaxHealth() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
-        if (target == null) return 20.0;
-        return Math.round(target.getMaxHealth() * 10.0) / 10.0;
+        Entity target = getTargetEntity();
+        if (target instanceof LivingEntity living) {
+            return Math.round(living.getMaxHealth() * 10.0) / 10.0;
+        }
+        return 20.0;
     }
 
     public double getDistance() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
+        Entity target = getTargetEntity();
         Minecraft mc = Minecraft.getInstance();
         if (target == null || mc.player == null) return 0.0;
         return Math.round(mc.player.distanceTo(target) * 10.0) / 10.0;
     }
 
     public String getLeftHandItemTexture() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
-        if (target == null) return "";
-        ItemStack item = target.getMainArm() == HumanoidArm.RIGHT ? target.getOffhandItem() : target.getMainHandItem();
-        if (item.isEmpty()) return "";
-        return BuiltInRegistries.ITEM.getKey(item.getItem()).toString();
+        Entity target = getTargetEntity();
+        if (target instanceof LivingEntity living) {
+            ItemStack item = living.getMainArm() == HumanoidArm.RIGHT ? living.getOffhandItem() : living.getMainHandItem();
+            if (item.isEmpty()) return "";
+            return BuiltInRegistries.ITEM.getKey(item.getItem()).toString();
+        }
+        return "";
     }
 
     public String getRightHandItemTexture() {
-        LivingEntity target = TargetTracker.getCurrentTarget();
-        if (target == null) return "";
-        ItemStack item = target.getMainArm() == HumanoidArm.RIGHT ? target.getMainHandItem() : target.getOffhandItem();
-        if (item.isEmpty()) return "";
-        return BuiltInRegistries.ITEM.getKey(item.getItem()).toString();
+        Entity target = getTargetEntity();
+        if (target instanceof LivingEntity living) {
+            ItemStack item = living.getMainArm() == HumanoidArm.RIGHT ? living.getMainHandItem() : living.getOffhandItem();
+            if (item.isEmpty()) return "";
+            return BuiltInRegistries.ITEM.getKey(item.getItem()).toString();
+        }
+        return "";
+    }
+
+    public Entity getEntity() {
+        return getTargetEntity();
     }
 
     @Override

@@ -80,7 +80,7 @@ public class TargetTracker {
         }
     }
 
-    public static double[] computeScreenPos(LivingEntity target) {
+    public static double[] computeScreenPos(Entity target) {
         Minecraft mc = Minecraft.getInstance();
         if (target == null || mc == null || mc.gameRenderer == null) {
             return new double[]{-9999.0, -9999.0};

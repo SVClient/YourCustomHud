@@ -141,4 +141,14 @@ public class HudElement {
         } catch (Exception ignored) {
         }
     }
+
+    public void attack(BuiltinTarget target) {
+        if (!enabled || interpreter == null) {
+            return;
+        }
+        try {
+            interpreter.callFunction("attack", target);
+        } catch (Exception ignored) {
+        }
+    }
 }

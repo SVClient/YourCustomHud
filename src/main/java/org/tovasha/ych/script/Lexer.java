@@ -21,6 +21,8 @@ public class Lexer {
         KEYWORDS.put("false", TokenType.FALSE);
         KEYWORDS.put("null", TokenType.NULL);
         KEYWORDS.put("for", TokenType.FOR);
+        KEYWORDS.put("foreach", TokenType.FOREACH);
+        KEYWORDS.put("in", TokenType.IN);
         KEYWORDS.put("while", TokenType.WHILE);
         KEYWORDS.put("break", TokenType.BREAK);
         KEYWORDS.put("continue", TokenType.CONTINUE);

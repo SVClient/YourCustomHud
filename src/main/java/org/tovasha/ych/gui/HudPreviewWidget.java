@@ -132,10 +132,6 @@ public class HudPreviewWidget {
 
             draggingElement.setX(newX);
             draggingElement.setY(newY);
-
-            if (onElementMoved != null) {
-                onElementMoved.run();
-            }
             return true;
         }
         return false;

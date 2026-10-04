@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
@@ -33,11 +34,23 @@ public class RenderUtils {
     public static final Identifier FONT_CALIBRI = Identifier.fromNamespaceAndPath("ych", "calibri");
     public static final Identifier FONT_GEORGIA = Identifier.fromNamespaceAndPath("ych", "georgia");
 
+    public static void drawSprite(GuiGraphics graphics, Identifier spriteId, float x, float y, float w, float h) {
+        if (graphics == null || spriteId == null) return;
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, (int) x, (int) y, (int) w, (int) h);
+    }
+
     public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h) {
         drawImage(graphics, path, x, y, w, h, 0.0f);
     }
 
     public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h, float radius) {
+        if (path != null && (path.contains("mob_effect") || path.startsWith("mob_effect/"))) {
+            Identifier spriteId = Identifier.tryParse(path);
+            if (spriteId != null) {
+                drawSprite(graphics, spriteId, x, y, w, h);
+                return;
+            }
+        }
         Identifier textureId = CustomTextureManager.getOrLoadTexture(path);
         if (textureId == null) return;
         drawTexture(graphics, textureId, x, y, w, h, radius, 0.0f, 1.0f, 0.0f, 1.0f, 0xFFFFFFFF);
