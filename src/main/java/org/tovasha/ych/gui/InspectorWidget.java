@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.tovasha.ych.api.HudElement;
@@ -39,7 +39,7 @@ public class InspectorWidget {
         this.height = height;
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         RenderUtils.drawRect(graphics, x, y, width, height, Theme.getBgPanel());
 
         int halfWidth = width / 2;
@@ -62,7 +62,7 @@ public class InspectorWidget {
         renderVariables(graphics, x + halfWidth + 9, y + headerH + 4, width - halfWidth - 18, height - headerH - 8, mouseX, mouseY);
     }
 
-    private void renderParams(GuiGraphics graphics, int px, int py, int pw, int ph, int mouseX, int mouseY) {
+    private void renderParams(GuiGraphicsExtractor graphics, int px, int py, int pw, int ph, int mouseX, int mouseY) {
         List<ParamItem> items = new ArrayList<>();
         if (element != null) {
             items.add(new ParamItem("Params.x", String.valueOf(element.getX()), false, 0));
@@ -127,7 +127,7 @@ public class InspectorWidget {
         graphics.disableScissor();
     }
 
-    private void renderVariables(GuiGraphics graphics, int vx, int vy, int vw, int vh, int mouseX, int mouseY) {
+    private void renderVariables(GuiGraphicsExtractor graphics, int vx, int vy, int vw, int vh, int mouseX, int mouseY) {
         List<VarItem> items = new ArrayList<>();
         items.add(new VarItem("Variables.nick", String.valueOf(builtinVariables.getProperty("nick"))));
         items.add(new VarItem("Variables.minecraft_version", String.valueOf(builtinVariables.getProperty("minecraft_version"))));

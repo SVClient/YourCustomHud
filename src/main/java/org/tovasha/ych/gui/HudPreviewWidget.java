@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2fStack;
@@ -44,7 +44,7 @@ public class HudPreviewWidget {
         return (float) width / (float) screenW;
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTick) {
+    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTick) {
         graphics.enableScissor(x, y, x + width, y + height);
 
         graphics.blit(BG_TEXTURE, x, y, x + width, y + height, 0.0f, 1.0f, 0.0f, 1.0f);

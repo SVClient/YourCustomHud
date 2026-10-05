@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -107,7 +107,7 @@ public class CodeEditorWidget {
         return maxW;
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         Font font = Minecraft.getInstance().font;
 
         RenderUtils.drawRect(graphics, x, y, width, height, Theme.getEditorBg());
@@ -134,7 +134,7 @@ public class CodeEditorWidget {
             String lineNumStr = String.valueOf(i + 1);
             Component lineNumComp = styled(lineNumStr);
             int lineNumX = x + GUTTER_WIDTH - 6 - font.width(lineNumComp);
-            graphics.drawString(font, lineNumComp, lineNumX, lineY, Theme.getEditorGutterText(), false);
+            graphics.text(font, lineNumComp, lineNumX, lineY, Theme.getEditorGutterText(), false);
         }
         graphics.disableScissor();
 
@@ -214,11 +214,11 @@ public class CodeEditorWidget {
             int tipY = Math.max(y, mouseY - 18);
             RenderUtils.drawRoundedRect(graphics, tipX, tipY, tipW, tipH, 4, 0xEE1E1E24);
             RenderUtils.drawRoundedOutline(graphics, tipX, tipY, tipW, tipH, 4, 1, 0xFFEF4444);
-            graphics.drawString(font, errComp, tipX + 6, tipY + 4, 0xFFFEE2E2, false);
+            graphics.text(font, errComp, tipX + 6, tipY + 4, 0xFFFEE2E2, false);
         }
     }
 
-    private void renderSelection(GuiGraphics graphics, int lineIndex, int textX, int lineY, String lineText, Font font) {
+    private void renderSelection(GuiGraphicsExtractor graphics, int lineIndex, int textX, int lineY, String lineText, Font font) {
         int selStartLine = Math.min(selectionAnchorLine, cursorLine);
         int selEndLine = Math.max(selectionAnchorLine, cursorLine);
         int selStartCol = selectionAnchorLine < cursorLine ? selectionAnchorCol : (selectionAnchorLine > cursorLine ? cursorCol : Math.min(selectionAnchorCol, cursorCol));
@@ -245,7 +245,7 @@ public class CodeEditorWidget {
         RenderUtils.drawRect(graphics, x1, lineY, x2 - x1, LINE_HEIGHT, 0x443B82F6);
     }
 
-    private void renderSyntaxHighlightedLine(GuiGraphics graphics, String line, int textX, int lineY, Font font) {
+    private void renderSyntaxHighlightedLine(GuiGraphicsExtractor graphics, String line, int textX, int lineY, Font font) {
         int currentX = textX;
         int i = 0;
         int len = line.length();
@@ -256,7 +256,7 @@ public class CodeEditorWidget {
             if (c == '/' && i + 1 < len && line.charAt(i + 1) == '/') {
                 String comment = line.substring(i);
                 Component comp = styled(comment);
-                graphics.drawString(font, comp, currentX, lineY, 0xFF6272A4, false);
+                graphics.text(font, comp, currentX, lineY, 0xFF6272A4, false);
                 break;
             }
 
@@ -271,7 +271,7 @@ public class CodeEditorWidget {
                 if (i < len) i++;
                 String strToken = line.substring(strStart, i);
                 Component comp = styled(strToken);
-                graphics.drawString(font, comp, currentX, lineY, 0xFFF1FA8C, false);
+                graphics.text(font, comp, currentX, lineY, 0xFFF1FA8C, false);
                 currentX += font.width(comp);
                 continue;
             }
@@ -283,7 +283,7 @@ public class CodeEditorWidget {
                 }
                 String numToken = line.substring(numStart, i);
                 Component comp = styled(numToken);
-                graphics.drawString(font, comp, currentX, lineY, 0xFFBD93F9, false);
+                graphics.text(font, comp, currentX, lineY, 0xFFBD93F9, false);
                 currentX += font.width(comp);
                 continue;
             }
@@ -324,7 +324,7 @@ public class CodeEditorWidget {
                         break;
                 }
                 Component comp = styled(idToken);
-                graphics.drawString(font, comp, currentX, lineY, color, false);
+                graphics.text(font, comp, currentX, lineY, color, false);
                 currentX += font.width(comp);
                 continue;
             }
@@ -332,7 +332,7 @@ public class CodeEditorWidget {
             String chStr = String.valueOf(c);
             int color = (c == '{' || c == '}' || c == '(' || c == ')' || c == '[' || c == ']') ? 0xFFFFB86C : 0xFFCCCCCC;
             Component comp = styled(chStr);
-            graphics.drawString(font, comp, currentX, lineY, color, false);
+            graphics.text(font, comp, currentX, lineY, color, false);
             currentX += font.width(comp);
             i++;
         }

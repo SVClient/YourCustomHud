@@ -3,7 +3,8 @@ package org.tovasha.ych.gui;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
-import net.minecraft.client.gui.GuiGraphics;
+
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -88,7 +89,7 @@ public class HudEditorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         int leftWidth = (int) (width * 0.65);
 
         previewWidget.render(graphics, mouseX, mouseY, partialTick);
@@ -260,7 +261,7 @@ public class HudEditorScreen extends Screen {
             YourCustomHud.saveConfig();
         }
         if (minecraft != null) {
-            minecraft.setScreen(null);
+            minecraft.gui.setScreen(null);
         }
     }
 

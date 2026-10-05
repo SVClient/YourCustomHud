@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.PlayerSkin;
@@ -21,7 +21,7 @@ import org.tovasha.ych.script.ScriptCallable;
 public class BuiltinRender implements ScriptNamespace {
     @Getter
     @Setter
-    private GuiGraphics graphics;
+    private GuiGraphicsExtractor graphics;
     private final HudElement element;
 
     private final Map<String, Object> methods = new HashMap<>();

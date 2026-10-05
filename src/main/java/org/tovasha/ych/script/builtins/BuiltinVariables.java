@@ -229,7 +229,7 @@ public class BuiltinVariables implements ScriptNamespace {
             case "timeofday":
             case "timename":
                 if (mc.level != null) {
-                    long t = (mc.level.getDayTime() % 24000L + 24000L) % 24000L;
+                    long t = (mc.level.getOverworldClockTime() % 24000L + 24000L) % 24000L;
                     boolean isRu = mc.options != null && "ru_ru".equalsIgnoreCase(mc.options.languageCode);
                     if (isRu) {
                         if (t < 1000 || t >= 23000) return "Утро";
@@ -246,27 +246,27 @@ public class BuiltinVariables implements ScriptNamespace {
                 return "Day";
             case "isday":
                 if (mc.level != null) {
-                    long t = (mc.level.getDayTime() % 24000L + 24000L) % 24000L;
+                    long t = (mc.level.getOverworldClockTime() % 24000L + 24000L) % 24000L;
                     return t < 12000;
                 }
                 return true;
             case "isnight":
                 if (mc.level != null) {
-                    long t = (mc.level.getDayTime() % 24000L + 24000L) % 24000L;
+                    long t = (mc.level.getOverworldClockTime() % 24000L + 24000L) % 24000L;
                     return t >= 13500 && t < 23000;
                 }
                 return false;
             case "rawtime":
             case "timeticks":
                 if (mc.level != null) {
-                    return (double) ((mc.level.getDayTime() % 24000L + 24000L) % 24000L);
+                    return (double) ((mc.level.getOverworldClockTime() % 24000L + 24000L) % 24000L);
                 }
                 return 0.0;
             case "day":
             case "days":
             case "daycount":
                 if (mc.level != null) {
-                    return (double) (mc.level.getDayTime() / 24000L);
+                    return (double) (mc.level.getOverworldClockTime() / 24000L);
                 }
                 return 0.0;
             case "weather":

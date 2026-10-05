@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.tovasha.ych.script.Interpreter;
 import org.tovasha.ych.script.Lexer;
 import org.tovasha.ych.script.Parser;
@@ -105,7 +105,7 @@ public class HudElement {
         }
     }
 
-    public void render(GuiGraphics graphics, float deltaTick) {
+    public void render(GuiGraphicsExtractor graphics, float deltaTick) {
         if (!enabled || interpreter == null) {
             return;
         }

@@ -5,7 +5,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -37,7 +37,7 @@ public class YourCustomHud implements ClientModInitializer {
         AutoConfig.register(MainConfig.class, GsonConfigSerializer::new);
         CONFIG = AutoConfig.getConfigHolder(MainConfig.class).getConfig();
 
-        editorKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        editorKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.yourcustomhud.open_editor",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_RIGHT_SHIFT,
@@ -49,7 +49,7 @@ public class YourCustomHud implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (editorKeyBinding.consumeClick()) {
-                client.setScreen(new HudEditorScreen());
+                client.gui.setScreen(new HudEditorScreen());
             }
             TargetTracker.update();
             EVENT_BUS.post(new TickEvent());

@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import net.minecraft.client.gui.GuiGraphics;
+
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.tovasha.ych.script.builtins.BuiltinTarget;
 
 public class HudRegistry {
@@ -44,7 +45,7 @@ public class HudRegistry {
         ORDERED_ELEMENTS.add(toIndex, el);
     }
 
-    public static void renderAll(GuiGraphics graphics, float deltaTick) {
+    public static void renderAll(GuiGraphicsExtractor graphics, float deltaTick) {
         for (HudElement element : ORDERED_ELEMENTS) {
             element.render(graphics, deltaTick);
         }

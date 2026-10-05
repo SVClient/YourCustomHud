@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.Hud;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.effect.MobEffect;
@@ -30,7 +31,7 @@ public class Potion implements ScriptNamespace {
             this.duration = new PotionDuration(instance.getDuration(), formatted);
             Holder<MobEffect> holder = instance.getEffect();
             this.name = holder.value().getDisplayName().getString();
-            Identifier sprite = Gui.getMobEffectSprite(holder);
+            Identifier sprite = Hud.getMobEffectSprite(holder);
             this.icon = sprite != null ? sprite.toString() : "";
         } else {
             this.amplifier = 0;

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -55,7 +55,7 @@ public class PresetBarWidget {
         return total;
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         RenderUtils.drawRect(graphics, x, y, width, height, Theme.getBgHeader());
         RenderUtils.drawRect(graphics, x, y + height - 1, width, 1, Theme.getBorder());
 
@@ -126,7 +126,7 @@ public class PresetBarWidget {
         drawPlus(graphics, curX + 7, centerY, hoverPlus ? 0xFFFFFFFF : Theme.getTextPrimary());
     }
 
-    private void drawChevron(GuiGraphics graphics, int cx, int cy, boolean left, int color) {
+    private void drawChevron(GuiGraphicsExtractor graphics, int cx, int cy, boolean left, int color) {
         int dir = left ? 1 : -1;
         int tipX = left ? cx - 2 : cx + 2;
         for (int i = 0; i < 4; i++) {
@@ -135,12 +135,12 @@ public class PresetBarWidget {
         }
     }
 
-    private void drawPlus(GuiGraphics graphics, int cx, int cy, int color) {
+    private void drawPlus(GuiGraphicsExtractor graphics, int cx, int cy, int color) {
         graphics.fill(cx - 3, cy, cx + 4, cy + 1, color);
         graphics.fill(cx, cy - 3, cx + 1, cy + 4, color);
     }
 
-    private void drawMinus(GuiGraphics graphics, int cx, int cy, int color) {
+    private void drawMinus(GuiGraphicsExtractor graphics, int cx, int cy, int color) {
         graphics.fill(cx - 3, cy, cx + 4, cy + 1, color);
     }
 

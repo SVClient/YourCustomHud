@@ -2,12 +2,12 @@ package org.tovasha.ych.render;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.PlayerFaceRenderer;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
-import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
@@ -34,16 +34,16 @@ public class RenderUtils {
     public static final Identifier FONT_CALIBRI = Identifier.fromNamespaceAndPath("ych", "calibri");
     public static final Identifier FONT_GEORGIA = Identifier.fromNamespaceAndPath("ych", "georgia");
 
-    public static void drawSprite(GuiGraphics graphics, Identifier spriteId, float x, float y, float w, float h) {
+    public static void drawSprite(GuiGraphicsExtractor graphics, Identifier spriteId, float x, float y, float w, float h) {
         if (graphics == null || spriteId == null) return;
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, spriteId, (int) x, (int) y, (int) w, (int) h);
     }
 
-    public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h) {
+    public static void drawImage(GuiGraphicsExtractor graphics, String path, float x, float y, float w, float h) {
         drawImage(graphics, path, x, y, w, h, 0.0f);
     }
 
-    public static void drawImage(GuiGraphics graphics, String path, float x, float y, float w, float h, float radius) {
+    public static void drawImage(GuiGraphicsExtractor graphics, String path, float x, float y, float w, float h, float radius) {
         if (path != null && (path.contains("mob_effect") || path.startsWith("mob_effect/"))) {
             Identifier spriteId = Identifier.tryParse(path);
             if (spriteId != null) {
@@ -56,7 +56,7 @@ public class RenderUtils {
         drawTexture(graphics, textureId, x, y, w, h, radius, 0.0f, 1.0f, 0.0f, 1.0f, 0xFFFFFFFF);
     }
 
-    public static void drawTexture(GuiGraphics graphics, Identifier textureId, float x, float y, float w, float h, float radius,
+    public static void drawTexture(GuiGraphicsExtractor graphics, Identifier textureId, float x, float y, float w, float h, float radius,
                                    float u0, float u1, float v0, float v1, int color) {
         if (graphics == null || textureId == null) return;
         if (radius <= 0.5f) {
@@ -70,7 +70,7 @@ public class RenderUtils {
                 TextureSetup setup = TextureSetup.singleTexture(tex.getTextureView(), tex.getSampler());
                 GuiRenderState state = bridge.ych$getGuiRenderState();
                 ScreenRectangle scissor = bridge.ych$getCurrentScissor();
-                state.submitGuiElement(new RoundedTextureRenderState(setup, graphics.pose(), x, y, w, h, radius, u0, u1, v0, v1, color, scissor));
+                state.addGuiElement(new RoundedTextureRenderState(setup, graphics.pose(), x, y, w, h, radius, u0, u1, v0, v1, color, scissor));
                 return;
             }
         }
@@ -78,14 +78,14 @@ public class RenderUtils {
         graphics.blit(textureId, (int) x, (int) y, (int) (x + w), (int) (y + h), u0, u1, v0, v1);
     }
 
-    public static void drawPlayerHead(GuiGraphics graphics, PlayerSkin skin, float x, float y, float size) {
+    public static void drawPlayerHead(GuiGraphicsExtractor graphics, PlayerSkin skin, float x, float y, float size) {
         drawPlayerHead(graphics, skin, x, y, size, 0.0f);
     }
 
-    public static void drawPlayerHead(GuiGraphics graphics, PlayerSkin skin, float x, float y, float size, float radius) {
+    public static void drawPlayerHead(GuiGraphicsExtractor graphics, PlayerSkin skin, float x, float y, float size, float radius) {
         if (graphics == null || skin == null) return;
         if (radius <= 0.5f) {
-            PlayerFaceRenderer.draw(graphics, skin, (int) x, (int) y, (int) size);
+            PlayerFaceExtractor.extractRenderState(graphics, skin, (int) x, (int) y, (int) size);
             return;
         }
 
@@ -94,29 +94,29 @@ public class RenderUtils {
         drawTexture(graphics, skinId, x, y, size, size, radius, 40.0f / 64.0f, 48.0f / 64.0f, 8.0f / 64.0f, 16.0f / 64.0f, 0xFFFFFFFF);
     }
 
-    public static void drawItem(GuiGraphics graphics, ItemStack stack, float x, float y, float size) {
+    public static void drawItem(GuiGraphicsExtractor graphics, ItemStack stack, float x, float y, float size) {
         if (graphics == null || stack == null || stack.isEmpty()) return;
         if (Math.abs(size - 16.0f) < 0.1f) {
-            graphics.renderItem(stack, (int) x, (int) y);
+            graphics.item(stack, (int) x, (int) y);
         } else {
             graphics.pose().pushMatrix();
             graphics.pose().translate(x, y);
             float scale = size / 16.0f;
             graphics.pose().scale(scale, scale);
-            graphics.renderItem(stack, 0, 0);
+            graphics.item(stack, 0, 0);
             graphics.pose().popMatrix();
         }
     }
 
-    public static void drawRect(GuiGraphics graphics, float x, float y, float w, float h, int color) {
+    public static void drawRect(GuiGraphicsExtractor graphics, float x, float y, float w, float h, int color) {
         drawRoundedRect(graphics, x, y, w, h, 0.0f, color);
     }
 
-    public static void drawGradientRect(GuiGraphics graphics, float x, float y, float w, float h, int colorStart, int colorEnd, boolean horizontal) {
+    public static void drawGradientRect(GuiGraphicsExtractor graphics, float x, float y, float w, float h, int colorStart, int colorEnd, boolean horizontal) {
         if (graphics instanceof GuiGraphicsBridge bridge) {
             GuiRenderState state = bridge.ych$getGuiRenderState();
             ScreenRectangle scissor = bridge.ych$getCurrentScissor();
-            state.submitGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, 0.0f, 0.0f, colorStart, colorEnd, horizontal, scissor));
+            state.addGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, 0.0f, 0.0f, colorStart, colorEnd, horizontal, scissor));
             return;
         }
 
@@ -127,22 +127,22 @@ public class RenderUtils {
         }
     }
 
-    public static void drawRoundedRect(GuiGraphics graphics, float x, float y, float w, float h, float radius, int color) {
+    public static void drawRoundedRect(GuiGraphicsExtractor graphics, float x, float y, float w, float h, float radius, int color) {
         if (graphics instanceof GuiGraphicsBridge bridge) {
             GuiRenderState state = bridge.ych$getGuiRenderState();
             ScreenRectangle scissor = bridge.ych$getCurrentScissor();
-            state.submitGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, radius, 0.0f, color, color, false, scissor));
+            state.addGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, radius, 0.0f, color, color, false, scissor));
             return;
         }
 
         drawRect(graphics, x, y, w, h, color);
     }
 
-    public static void drawOutline(GuiGraphics graphics, float x, float y, float w, float h, float thickness, int color) {
+    public static void drawOutline(GuiGraphicsExtractor graphics, float x, float y, float w, float h, float thickness, int color) {
         drawRoundedOutline(graphics, x, y, w, h, 0.0f, thickness, color);
     }
 
-    public static void drawRoundedOutline(GuiGraphics graphics, float x, float y, float w, float h, float radius, float thickness, int color) {
+    public static void drawRoundedOutline(GuiGraphicsExtractor graphics, float x, float y, float w, float h, float radius, float thickness, int color) {
         if (thickness <= 0.0f) {
             return;
         }
@@ -150,7 +150,7 @@ public class RenderUtils {
         if (graphics instanceof GuiGraphicsBridge bridge) {
             GuiRenderState state = bridge.ych$getGuiRenderState();
             ScreenRectangle scissor = bridge.ych$getCurrentScissor();
-            state.submitGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, radius, thickness, color, color, false, scissor));
+            state.addGuiElement(new RoundedRectRenderState(graphics.pose(), x, y, w, h, radius, thickness, color, color, false, scissor));
             return;
         }
 
@@ -165,34 +165,34 @@ public class RenderUtils {
         graphics.fill(xi + wi - ti, yi + ti, xi + wi, yi + hi - ti, color);
     }
 
-    public static void drawCircle(GuiGraphics graphics, float cx, float cy, float radius, int color) {
+    public static void drawCircle(GuiGraphicsExtractor graphics, float cx, float cy, float radius, int color) {
         drawRoundedRect(graphics, cx - radius, cy - radius, radius * 2.0f, radius * 2.0f, radius, color);
     }
 
-    public static void drawRing(GuiGraphics graphics, float cx, float cy, float radius, float thickness, int color) {
+    public static void drawRing(GuiGraphicsExtractor graphics, float cx, float cy, float radius, float thickness, int color) {
         drawRoundedOutline(graphics, cx - radius, cy - radius, radius * 2.0f, radius * 2.0f, radius, thickness, color);
     }
 
-    public static void drawArc(GuiGraphics graphics, float cx, float cy, float radius, float thickness, double startAngle, double endAngle, int color) {
+    public static void drawArc(GuiGraphicsExtractor graphics, float cx, float cy, float radius, float thickness, double startAngle, double endAngle, int color) {
         if (graphics instanceof GuiGraphicsBridge bridge) {
             GuiRenderState state = bridge.ych$getGuiRenderState();
             ScreenRectangle scissor = bridge.ych$getCurrentScissor();
-            state.submitGuiElement(new ArcRenderState(graphics.pose(), cx, cy, radius, thickness, startAngle, endAngle, color, scissor));
+            state.addGuiElement(new ArcRenderState(graphics.pose(), cx, cy, radius, thickness, startAngle, endAngle, color, scissor));
             return;
         }
 
         drawRing(graphics, cx, cy, radius, thickness, color);
     }
 
-    public static void drawText(GuiGraphics graphics, String text, float x, float y, int color) {
+    public static void drawText(GuiGraphicsExtractor graphics, String text, float x, float y, int color) {
         drawCustomText(graphics, text, x, y, "modern", 9.0f, color);
     }
 
-    public static void drawText(GuiGraphics graphics, String text, float x, float y, float size, int color) {
+    public static void drawText(GuiGraphicsExtractor graphics, String text, float x, float y, float size, int color) {
         drawCustomText(graphics, text, x, y, "modern", size, color);
     }
 
-    public static void drawCustomText(GuiGraphics graphics, String text, float x, float y, String fontId, float size, int color) {
+    public static void drawCustomText(GuiGraphicsExtractor graphics, String text, float x, float y, String fontId, float size, int color) {
         if (text == null || text.isEmpty()) return;
         Font font = Minecraft.getInstance().font;
         Identifier fontLoc = resolveFont(fontId);
@@ -208,7 +208,7 @@ public class RenderUtils {
         if (Math.abs(scale - 1.0f) >= 0.001f) {
             pose.scale(scale, scale);
         }
-        graphics.drawString(font, comp, 0, 0, color, false);
+        graphics.text(font, comp, 0, 0, color, false);
         pose.popMatrix();
     }
 

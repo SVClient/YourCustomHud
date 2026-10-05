@@ -85,7 +85,7 @@ public class TargetTracker {
         if (target == null || mc == null || mc.gameRenderer == null) {
             return new double[]{-9999.0, -9999.0};
         }
-        Camera camera = mc.gameRenderer.getMainCamera();
+        Camera camera = mc.gameRenderer.mainCamera();
         if (camera == null) {
             return new double[]{-9999.0, -9999.0};
         }
